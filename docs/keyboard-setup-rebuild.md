@@ -14,7 +14,7 @@ Toshy maps keys by **position**, like a Mac keyboard (`Control · Option · Comm
 |---|---|---|
 | **Caps Lock** | Hold = **real Ctrl**, tap = **Esc** | Toshy CapsLock Mode "Caps is Esc & LCtrl always" |
 | **Left Ctrl** | Mac **Control** | Real Ctrl in terminals; Mac-style in apps (Ctrl+A / E = line start / end) |
-| **Win** | **Option** | Word jumps. Win+1…9 = dock apps (like Alt+1…9). Tapping it does nothing |
+| **Win** | **Option** | Word jumps. Win+1…9 = dock apps (like Windows). Tapping it does nothing |
 | **Left Alt** | **Cmd** | Copy, paste, tabs, quit, app switching |
 | **Both Shift keys** | Real **Caps Lock** | GNOME option `shift:both_capslock` |
 
@@ -29,13 +29,13 @@ Toshy's internal names in its config: `RC` = Cmd (Toshy turns Alt into Right Ctr
 | Alt+A / S / F | Select all / save / find | Toshy |
 | Alt+T / W / N | New tab / close tab / new window | Toshy |
 | Alt+Q | Quit / close window (Alt+F4) | Toshy (GNOME `close` also has `<Alt>q`) |
-| Caps+1…9 | Browser / editor tab 1–9 (Caps = real Ctrl) | passes through as Ctrl+number |
+| **Alt+1…9**, Caps+1…9 | Tab 1–9 in Chrome, VS Code and kitty (Cmd+number, like a Mac) | Toshy default → Ctrl+number; kitty `map ctrl+N goto_tab N` |
 | Caps+Tab, Left Ctrl+Tab | Next tab (add Shift for previous) | Toshy custom "User tab switching" (apps) and "User terminal tab switching" (terminals) |
 | Alt+Shift+[ / ] | Previous / next tab | Toshy |
 | **Alt+Space** | **Activities / Launchpad** | Toshy → Shift+Ctrl+Space → GNOME `toggle-overview` |
 | **Alt+Tab** | Switch **apps** (one icon per app) | Toshy → Alt+Tab → GNOME `switch-applications` |
 | Alt+` | Switch windows of the same app | Toshy → GNOME `switch-group` |
-| **Alt+1…9**, Win+1…9 | Open or switch to dock app 1–9 (Caps+1…9 = tabs) | Toshy "User dock apps" → Super+1…9 → GNOME dock |
+| **Win+1…9** | Open or switch to dock app 1–9 (like Windows) | Toshy "User dock apps" → Super+1…9 → GNOME dock |
 | Alt+H / Alt+Ctrl+F / Alt+F3 | Hide / maximise / show desktop | Toshy |
 | **Alt+Caps+Enter** | Maximise / restore the window (Alt+Left Ctrl+Enter too) | Toshy → Alt+F10 → GNOME |
 | **Alt+Shift+H / L** | Switch to the desktop (workspace) on the left / right. In VS Code this replaces Alt+Shift+L "select all occurrences" (use Ctrl+F2) | Toshy → Super+Page Up/Down → GNOME |
@@ -258,17 +258,8 @@ keymap("User Caps word erase", {
 )
 
 keymap("User dock apps", {
-    # Alt (Cmd) + 1..9 and Win (Option) + 1..9 -> Super+1..9 = open or switch to dock app 1..9.
-    # Caps + 1..9 (literal Ctrl) is untouched: Ctrl+number = browser/editor tab 1..9.
-    C("RC-Key_1"):              C("Super-Key_1"),
-    C("RC-Key_2"):              C("Super-Key_2"),
-    C("RC-Key_3"):              C("Super-Key_3"),
-    C("RC-Key_4"):              C("Super-Key_4"),
-    C("RC-Key_5"):              C("Super-Key_5"),
-    C("RC-Key_6"):              C("Super-Key_6"),
-    C("RC-Key_7"):              C("Super-Key_7"),
-    C("RC-Key_8"):              C("Super-Key_8"),
-    C("RC-Key_9"):              C("Super-Key_9"),
+    # Win (Option) + 1..9 -> Super+1..9 = open or switch to dock app 1..9 (like Windows).
+    # Alt (Cmd) + 1..9 is left to Toshy's default, Ctrl+1..9 = tab 1..9 in Chrome, VS Code, kitty (like a Mac).
     C("Alt-Key_1"):             C("Super-Key_1"),
     C("Alt-Key_2"):             C("Super-Key_2"),
     C("Alt-Key_3"):             C("Super-Key_3"),
@@ -295,6 +286,11 @@ keymap("User Caps vim arrows", {
     C("Shift-LC-j"):            C("Shift-Down"),
     C("Shift-LC-k"):            C("Shift-Up"),
     C("Shift-LC-l"):            C("Shift-Right"),
+    # Caps+A / Caps+F = start / end of line (add Shift to select). Find stays on Alt+F, select all on Alt+A.
+    C("LC-a"):                  C("Home"),
+    C("LC-f"):                  C("End"),
+    C("Shift-LC-a"):            C("Shift-Home"),
+    C("Shift-LC-f"):            C("Shift-End"),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     not ctx_app_is_terminal and not ctx_app_is_remote

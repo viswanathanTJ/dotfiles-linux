@@ -150,7 +150,7 @@ html{scroll-behavior:smooth}
   <div class="board" role="list">
     <div class="cap" role="listitem"><span class="phys">Caps Lock</span><span class="role">Ctrl / Esc</span><span class="how">Hold = real Ctrl. Tap = Esc. Both Shifts = real Caps Lock.</span></div>
     <div class="cap" role="listitem"><span class="phys">Left Ctrl</span><span class="role">Control</span><span class="how">Mac Control: real Ctrl in terminals, Mac-style in apps.</span></div>
-    <div class="cap" role="listitem"><span class="phys">Win</span><span class="role">Option</span><span class="how">Word jumps. Win+1…9 = dock apps (like Alt+1…9). Tapping it does nothing.</span></div>
+    <div class="cap" role="listitem"><span class="phys">Win</span><span class="role">Option</span><span class="how">Word jumps. Win+1…9 = dock apps (like Windows). Tapping it does nothing.</span></div>
     <div class="cap" role="listitem"><span class="phys">Left Alt</span><span class="role">Cmd ⌘</span><span class="how">Copy, paste, tabs, quit, app switching.</span></div>
     <div class="cap space" role="listitem"><span class="phys">Space</span><span class="how"><kbd>Alt</kbd><span class="plus">+</span><kbd>Space</kbd> opens Activities (Launchpad), like Cmd+Space.</span></div>
   </div>
@@ -171,7 +171,7 @@ html{scroll-behavior:smooth}
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>S</kbd> / <kbd>F</kbd></td><td>Save / find</td><td><span class="tag toshy">Toshy</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>T</kbd> / <kbd>W</kbd> / <kbd>N</kbd></td><td>New tab / close tab / new window</td><td><span class="tag toshy">Toshy</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Q</kbd></td><td>Quit / close the window (sends Alt+F4)</td><td><span class="tag toshy">Toshy</span></td></tr>
-    <tr><td><kbd>Caps</kbd><span class="plus">+</span><kbd>1</kbd>…<kbd>9</kbd></td><td>Jump to browser / editor tab 1–9 (Caps = real Ctrl)</td><td><span class="tag toshy">Toshy</span> <span class="via">passes through as Ctrl+number</span></td></tr>
+    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>1</kbd>…<kbd>9</kbd> · <kbd>Caps</kbd><span class="plus">+</span><kbd>1</kbd>…<kbd>9</kbd></td><td>Tab 1–9 in Chrome, VS Code and kitty (Cmd+number, like a Mac)</td><td><span class="tag toshy">Toshy</span> <span class="via">default → Ctrl+number; kitty map ctrl+N goto_tab N</span></td></tr>
     <tr><td><kbd>Caps</kbd><span class="plus">+</span><kbd>Tab</kbd> · <kbd>Left Ctrl</kbd><span class="plus">+</span><kbd>Tab</kbd></td><td>Next tab (add Shift for previous)</td><td><span class="tag toshy">Toshy</span> <span class="via">custom "User tab switching" / "User terminal tab switching"</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>[</kbd> / <kbd>]</kbd></td><td>Previous / next tab</td><td><span class="tag toshy">Toshy</span></td></tr>
   </tbody></table></div>
@@ -181,7 +181,7 @@ html{scroll-behavior:smooth}
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Space</kbd></td><td>Activities / app grid (Launchpad, like Cmd+Space)</td><td><span class="tag toshy">Toshy</span> → <span class="tag gnome">GNOME</span> <span class="via">toggle-overview = Shift+Ctrl+Space</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Tab</kbd></td><td>Switch <strong>apps</strong> (two Chrome windows = one icon). Hold and press ↓ to see an app's windows.</td><td><span class="tag toshy">Toshy</span> → <span class="tag gnome">GNOME</span> <span class="via">switch-applications</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>`</kbd></td><td>Switch windows of the same app</td><td><span class="tag toshy">Toshy</span> → <span class="tag gnome">GNOME</span> <span class="via">switch-group</span></td></tr>
-    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>1</kbd>…<kbd>9</kbd> · <kbd>Win</kbd><span class="plus">+</span><kbd>1</kbd>…<kbd>9</kbd></td><td>Open or switch to dock app 1–9 (Caps+1…9 = tabs)</td><td><span class="tag toshy">Toshy</span> → Super+1…9 → <span class="tag gnome">GNOME</span> dock <span class="via">custom "User dock apps"</span></td></tr>
+    <tr><td><kbd>Win</kbd><span class="plus">+</span><kbd>1</kbd>…<kbd>9</kbd></td><td>Open or switch to dock app 1–9 (like Windows)</td><td><span class="tag toshy">Toshy</span> → Super+1…9 → <span class="tag gnome">GNOME</span> dock <span class="via">custom "User dock apps"</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>H</kbd></td><td>Hide (minimise) the window</td><td><span class="tag toshy">Toshy</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Ctrl</kbd><span class="plus">+</span><kbd>F</kbd></td><td>Maximise / restore</td><td><span class="tag toshy">Toshy</span></td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>Enter</kbd></td><td>Maximise / restore the window (Alt + Left Ctrl + Enter too)</td><td><span class="tag toshy">Toshy</span> → Alt+F10 → <span class="tag gnome">GNOME</span></td></tr>
@@ -405,17 +405,8 @@ keymap("User Caps word erase", {
 )
 
 keymap("User dock apps", {
-    # Alt (Cmd) + 1..9 and Win (Option) + 1..9 -&gt; Super+1..9 = open or switch to dock app 1..9.
-    # Caps + 1..9 (literal Ctrl) is untouched: Ctrl+number = browser/editor tab 1..9.
-    C("RC-Key_1"):              C("Super-Key_1"),
-    C("RC-Key_2"):              C("Super-Key_2"),
-    C("RC-Key_3"):              C("Super-Key_3"),
-    C("RC-Key_4"):              C("Super-Key_4"),
-    C("RC-Key_5"):              C("Super-Key_5"),
-    C("RC-Key_6"):              C("Super-Key_6"),
-    C("RC-Key_7"):              C("Super-Key_7"),
-    C("RC-Key_8"):              C("Super-Key_8"),
-    C("RC-Key_9"):              C("Super-Key_9"),
+    # Win (Option) + 1..9 -&gt; Super+1..9 = open or switch to dock app 1..9 (like Windows).
+    # Alt (Cmd) + 1..9 is left to Toshy's default, Ctrl+1..9 = tab 1..9 in Chrome, VS Code, kitty (like a Mac).
     C("Alt-Key_1"):             C("Super-Key_1"),
     C("Alt-Key_2"):             C("Super-Key_2"),
     C("Alt-Key_3"):             C("Super-Key_3"),
@@ -442,6 +433,11 @@ keymap("User Caps vim arrows", {
     C("Shift-LC-j"):            C("Shift-Down"),
     C("Shift-LC-k"):            C("Shift-Up"),
     C("Shift-LC-l"):            C("Shift-Right"),
+    # Caps+A / Caps+F = start / end of line (add Shift to select). Find stays on Alt+F, select all on Alt+A.
+    C("LC-a"):                  C("Home"),
+    C("LC-f"):                  C("End"),
+    C("Shift-LC-a"):            C("Shift-Home"),
+    C("Shift-LC-f"):            C("Shift-End"),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     not ctx_app_is_terminal and not ctx_app_is_remote

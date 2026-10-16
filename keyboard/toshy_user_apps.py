@@ -100,17 +100,8 @@ keymap("User Caps word erase", {
 )
 
 keymap("User dock apps", {
-    # Alt (Cmd) + 1..9 and Win (Option) + 1..9 -> Super+1..9 = open or switch to dock app 1..9.
-    # Caps + 1..9 (literal Ctrl) is untouched: Ctrl+number = browser/editor tab 1..9.
-    C("RC-Key_1"):              C("Super-Key_1"),
-    C("RC-Key_2"):              C("Super-Key_2"),
-    C("RC-Key_3"):              C("Super-Key_3"),
-    C("RC-Key_4"):              C("Super-Key_4"),
-    C("RC-Key_5"):              C("Super-Key_5"),
-    C("RC-Key_6"):              C("Super-Key_6"),
-    C("RC-Key_7"):              C("Super-Key_7"),
-    C("RC-Key_8"):              C("Super-Key_8"),
-    C("RC-Key_9"):              C("Super-Key_9"),
+    # Win (Option) + 1..9 -> Super+1..9 = open or switch to dock app 1..9 (like Windows).
+    # Alt (Cmd) + 1..9 is left to Toshy's default, Ctrl+1..9 = tab 1..9 in Chrome, VS Code, kitty (like a Mac).
     C("Alt-Key_1"):             C("Super-Key_1"),
     C("Alt-Key_2"):             C("Super-Key_2"),
     C("Alt-Key_3"):             C("Super-Key_3"),
