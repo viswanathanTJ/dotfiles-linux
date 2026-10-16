@@ -1,0 +1,329 @@
+<title>Dotfiles Repo Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@600;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; each section = one mechanism, diagram first, detail after */
+:root{
+  --bg:#f2f4f3; --surface:#ffffff; --sunk:#e5e9e7; --fg:#18201d; --muted:#56635d;
+  --line:#c5cec9; --accent:#0f7a6c; --accent-soft:#d6ece8; --warm:#a8590b; --warm-soft:#f6e6d4;
+  --code-bg:#121916; --code-fg:#dfe8e3;
+  --display:"Schibsted Grotesk","Segoe UI",system-ui,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111614; --surface:#18201d; --sunk:#202a26; --fg:#e3ebe7; --muted:#9aaba3;
+  --line:#33413b; --accent:#4cc3b1; --accent-soft:#163631; --warm:#eda55c; --warm-soft:#3a2a18;
+  --code-bg:#0b100e; --code-fg:#dbe5e0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#18201d; --sunk:#202a26; --fg:#e3ebe7; --muted:#9aaba3;
+  --line:#33413b; --accent:#4cc3b1; --accent-soft:#163631; --warm:#eda55c; --warm-soft:#3a2a18;
+  --code-bg:#0b100e; --code-fg:#dbe5e0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:17px/1.6 var(--body)}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px;display:grid;gap:56px}
+header{display:grid;gap:12px}
+.path{font:600 13px/1.3 var(--mono);color:var(--accent);letter-spacing:.02em}
+h1{font:800 clamp(32px,5vw,50px)/1.05 var(--display);margin:0;letter-spacing:-.015em;text-wrap:balance}
+h2{font:800 26px/1.15 var(--display);margin:0;text-wrap:balance}
+h3{font:600 18px/1.3 var(--display);margin:0}
+p{margin:0;max-width:68ch}
+.lede{font-size:19px;color:var(--muted);max-width:66ch}
+section{display:grid;gap:16px;min-width:0}
+.kicker{font:600 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+code{font:14px var(--mono);background:var(--sunk);padding:1px 6px;border-radius:4px;overflow-wrap:anywhere}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 16px 14px;display:grid;gap:10px;min-width:0}
+.scroll{overflow-x:auto}
+figure svg{display:block;width:100%;min-width:640px;height:auto}
+figcaption{font-size:15px;color:var(--muted);max-width:80ch}
+/* diagram classes (styled by the page, no style inside the SVG) */
+.d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.d-repo{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.d-warm{fill:var(--warm-soft);stroke:var(--warm);stroke-width:1.5}
+.d-t{fill:var(--fg);font:600 13px var(--body)}
+.d-m{fill:var(--fg);font:12px var(--mono)}
+.d-s{fill:var(--muted);font:12px var(--body)}
+.d-h{fill:var(--muted);font:600 11px var(--mono);letter-spacing:.1em}
+.d-l{stroke:var(--fg);stroke-width:1.5;fill:none}
+.d-la{stroke:var(--accent);stroke-width:2;fill:none}
+.d-lw{stroke:var(--warm);stroke-width:2;fill:none}
+.d-dash{stroke-dasharray:5 5}
+.d-ah{fill:var(--fg)} .d-aha{fill:var(--accent)} .d-ahw{fill:var(--warm)}
+.d-lab{fill:var(--accent);font:600 12px var(--mono)}
+.d-labw{fill:var(--warm);font:600 12px var(--mono)}
+.d-labf{fill:var(--fg);font:600 12px var(--mono)}
+/* tables */
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:15.5px}
+th,td{text-align:left;vertical-align:top;padding:9px 14px;border-bottom:1px solid var(--line)}
+th{font:600 12px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+td:first-child{white-space:nowrap}
+pre{margin:0;background:var(--code-bg);color:var(--code-fg);padding:14px 16px;border-radius:10px;overflow-x:auto;font:13.5px/1.6 var(--mono)}
+pre .c{color:#8fa59b}
+.steps{margin:0;padding-left:22px;display:grid;gap:10px;max-width:80ch}
+.steps li::marker{font:600 15px var(--mono);color:var(--accent)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.note{border-left:3px solid var(--warm);background:var(--warm-soft);padding:10px 14px;border-radius:0 8px 8px 0;max-width:80ch}
+footer{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)} td:first-child{white-space:normal}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="path">~/dotfiles · GNU Stow · git</div>
+  <h1>Dotfiles repo map</h1>
+  <p class="lede">One git repo holds every config. Your home folder holds links into it, so an edit in either place is the same edit, and <code>git diff</code> shows it. Three things can't be links; each has its own sync path.</p>
+</header>
+
+<section id="links">
+  <div class="kicker">How the configs are wired</div>
+  <h2>Links point from your home folder into the repo</h2>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 980 300" role="img" aria-label="Apps open their usual paths in the home folder; each path is a symlink to a file inside ~/dotfiles/stow, which git tracks.">
+      <defs>
+        <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ah"/></marker>
+        <marker id="ah1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-aha"/></marker>
+      </defs>
+      <text x="20" y="28" class="d-h">REPO (REAL FILES)</text>
+      <text x="480" y="28" class="d-h">HOME FOLDER (LINKS)</text>
+      <text x="820" y="28" class="d-h">APP</text>
+
+      <rect x="20" y="44" width="360" height="40" rx="6" class="d-repo"/>
+      <text x="34" y="69" class="d-m">stow/kitty/.config/kitty/kitty.conf</text>
+      <rect x="480" y="44" width="280" height="40" rx="6" class="d-box"/>
+      <text x="494" y="69" class="d-m">~/.config/kitty/kitty.conf</text>
+      <rect x="820" y="44" width="140" height="40" rx="6" class="d-box"/>
+      <text x="890" y="69" class="d-t" text-anchor="middle">kitty</text>
+
+      <rect x="20" y="104" width="360" height="40" rx="6" class="d-repo"/>
+      <text x="34" y="129" class="d-m">stow/tmux/.tmux.conf</text>
+      <rect x="480" y="104" width="280" height="40" rx="6" class="d-box"/>
+      <text x="494" y="129" class="d-m">~/.tmux.conf</text>
+      <rect x="820" y="104" width="140" height="40" rx="6" class="d-box"/>
+      <text x="890" y="129" class="d-t" text-anchor="middle">tmux</text>
+
+      <rect x="20" y="164" width="360" height="40" rx="6" class="d-repo"/>
+      <text x="34" y="189" class="d-m">stow/vscode/.config/Code/User/settings.json</text>
+      <rect x="480" y="164" width="280" height="40" rx="6" class="d-box"/>
+      <text x="494" y="189" class="d-m">~/.config/Code/User/settings.json</text>
+      <rect x="820" y="164" width="140" height="40" rx="6" class="d-box"/>
+      <text x="890" y="189" class="d-t" text-anchor="middle">VS Code</text>
+
+      <!-- link arrows: home -> repo -->
+      <line x1="478" y1="64" x2="384" y2="64" class="d-la" marker-end="url(#ah1a)"/>
+      <line x1="478" y1="124" x2="384" y2="124" class="d-la" marker-end="url(#ah1a)"/>
+      <line x1="478" y1="184" x2="384" y2="184" class="d-la" marker-end="url(#ah1a)"/>
+      <text x="430" y="56" class="d-lab" text-anchor="middle">points to</text>
+      <!-- app opens home path -->
+      <line x1="818" y1="64" x2="764" y2="64" class="d-l" marker-end="url(#ah1)"/>
+      <line x1="818" y1="124" x2="764" y2="124" class="d-l" marker-end="url(#ah1)"/>
+      <line x1="818" y1="184" x2="764" y2="184" class="d-l" marker-end="url(#ah1)"/>
+      <text x="791" y="56" class="d-labf" text-anchor="middle">opens</text>
+
+      <!-- git -->
+      <rect x="20" y="240" width="360" height="44" rx="6" class="d-box"/>
+      <text x="34" y="267" class="d-m">git: status · diff · commit · tag</text>
+      <line x1="200" y1="206" x2="200" y2="238" class="d-l" marker-start="url(#ah1)"/>
+      <text x="212" y="226" class="d-s">tracks</text>
+      <text x="480" y="244" class="d-s">Made by: stow -d ~/dotfiles/stow -t ~ --no-folding kitty</text>
+      <text x="480" y="266" class="d-s">Each file is linked on its own; new files an app creates stay ordinary files.</text>
+    </svg>
+    </div>
+    <figcaption>kitty, tmux and VS Code still open their usual paths. Linux follows the link to the file inside <code>~/dotfiles/stow/</code>, so a change made in the app, in Neovim or in the repo lands in the one file git tracks.</figcaption>
+  </figure>
+</section>
+
+<section id="sync">
+  <div class="kicker">Three kinds of config</div>
+  <h2>Files are linked; Toshy and GNOME need a sync step</h2>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 980 330" role="img" aria-label="Config files are symlinked both ways; Toshy rules are copied in whichever direction was edited last when reload-shortcuts runs; GNOME settings are written one way by setup.sh with gsettings.">
+      <defs>
+        <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ah"/></marker>
+        <marker id="ah2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-aha"/></marker>
+        <marker id="ah2w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ahw"/></marker>
+      </defs>
+      <text x="20" y="28" class="d-h">IN THE REPO</text>
+      <text x="380" y="28" class="d-h">HOW IT GETS APPLIED</text>
+      <text x="700" y="28" class="d-h">ON THE MACHINE</text>
+
+      <!-- lane 1 files -->
+      <text x="20" y="62" class="d-t">Config files</text>
+      <rect x="20" y="72" width="300" height="44" rx="6" class="d-repo"/>
+      <text x="34" y="99" class="d-m">stow/&lt;app&gt;/…</text>
+      <line x1="324" y1="94" x2="696" y2="94" class="d-la" marker-start="url(#ah2a)" marker-end="url(#ah2a)"/>
+      <text x="510" y="86" class="d-lab" text-anchor="middle">symlink: same file both ways</text>
+      <rect x="700" y="72" width="260" height="44" rx="6" class="d-box"/>
+      <text x="714" y="99" class="d-m">~/.config/…, ~/.tmux.conf …</text>
+
+      <!-- lane 2 toshy -->
+      <text x="20" y="160" class="d-t">Toshy rules</text>
+      <rect x="20" y="170" width="300" height="44" rx="6" class="d-repo"/>
+      <text x="34" y="197" class="d-m">keyboard/toshy_user_apps.py</text>
+      <line x1="324" y1="184" x2="696" y2="184" class="d-lw" marker-end="url(#ah2w)"/>
+      <line x1="696" y1="202" x2="324" y2="202" class="d-lw" marker-end="url(#ah2w)"/>
+      <text x="510" y="176" class="d-labw" text-anchor="middle">reload-shortcuts: newest edit wins</text>
+      <text x="510" y="222" class="d-s" text-anchor="middle">copies one section, never the whole file</text>
+      <rect x="700" y="170" width="260" height="44" rx="6" class="d-box"/>
+      <text x="714" y="190" class="d-m">toshy_config.py</text>
+      <text x="714" y="206" class="d-s">user_apps section only</text>
+
+      <!-- lane 3 gnome -->
+      <text x="20" y="258" class="d-t">GNOME settings</text>
+      <rect x="20" y="268" width="300" height="44" rx="6" class="d-repo"/>
+      <text x="34" y="295" class="d-m">gnome/settings.sh</text>
+      <line x1="324" y1="282" x2="696" y2="282" class="d-l" marker-end="url(#ah2)"/>
+      <text x="510" y="274" class="d-labf" text-anchor="middle">./setup.sh keyboard · desktops · lock</text>
+      <line x1="696" y1="300" x2="324" y2="300" class="d-l d-dash"/>
+      <text x="510" y="320" class="d-s" text-anchor="middle">not copied back: edit settings.sh, run setup again</text>
+      <rect x="700" y="268" width="260" height="44" rx="6" class="d-box"/>
+      <text x="714" y="288" class="d-m">GNOME settings database</text>
+      <text x="714" y="304" class="d-s">(dconf, via gsettings)</text>
+    </svg>
+    </div>
+    <figcaption>Toshy's config is a 6,000-line file Toshy regenerates on upgrade, so only your section is copied in and out. GNOME keeps its settings in a database, not files, so <code>gnome/settings.sh</code> writes them and nothing reads them back.</figcaption>
+  </figure>
+</section>
+
+<section id="commands">
+  <div class="kicker">setup.sh</div>
+  <h2>What each command does to a file in your home folder</h2>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 980 270" role="img" aria-label="A config in the home folder is a plain file, a link into the repo, or absent so the app uses its defaults. apply and --adopt make it a link, --unlink makes it a plain copy, --reset removes it.">
+      <defs>
+        <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ah"/></marker>
+        <marker id="ah3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-aha"/></marker>
+        <marker id="ah3w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ahw"/></marker>
+      </defs>
+      <rect x="40" y="120" width="240" height="64" rx="8" class="d-box"/>
+      <text x="160" y="148" class="d-t" text-anchor="middle">Plain file</text>
+      <text x="160" y="168" class="d-s" text-anchor="middle">this machine's own copy</text>
+
+      <rect x="370" y="120" width="240" height="64" rx="8" class="d-repo"/>
+      <text x="490" y="148" class="d-t" text-anchor="middle">Linked</text>
+      <text x="490" y="168" class="d-s" text-anchor="middle">points into the repo</text>
+
+      <rect x="700" y="120" width="240" height="64" rx="8" class="d-box"/>
+      <text x="820" y="148" class="d-t" text-anchor="middle">No file</text>
+      <text x="820" y="168" class="d-s" text-anchor="middle">app uses its defaults</text>
+
+      <!-- plain <-> linked -->
+      <line x1="282" y1="140" x2="366" y2="140" class="d-la" marker-end="url(#ah3a)"/>
+      <text x="324" y="132" class="d-lab" text-anchor="middle">apply</text>
+      <line x1="368" y1="166" x2="284" y2="166" class="d-l" marker-end="url(#ah3)"/>
+      <text x="326" y="184" class="d-labf" text-anchor="middle">--unlink</text>
+      <!-- adopt arc -->
+      <path d="M160,118 C160,40 490,40 490,116" class="d-lw" marker-end="url(#ah3w)"/>
+      <text x="325" y="52" class="d-labw" text-anchor="middle">--adopt: file copied into the repo first</text>
+      <!-- linked <-> none -->
+      <line x1="612" y1="140" x2="696" y2="140" class="d-l" marker-end="url(#ah3)"/>
+      <text x="654" y="132" class="d-labf" text-anchor="middle">--reset</text>
+      <line x1="698" y1="166" x2="614" y2="166" class="d-la" marker-end="url(#ah3a)"/>
+      <text x="656" y="184" class="d-lab" text-anchor="middle">apply</text>
+
+      <text x="160" y="222" class="d-s" text-anchor="middle">apply moves it to ~/.dotfiles-backup/ first</text>
+      <text x="490" y="222" class="d-s" text-anchor="middle">--status reports which box each file is in</text>
+      <text x="820" y="222" class="d-s" text-anchor="middle">.bashrc and .profile get Ubuntu's defaults</text>
+      <text x="490" y="250" class="d-s" text-anchor="middle">Add --dry-run to any command to see the moves without making them.</text>
+    </svg>
+    </div>
+    <figcaption>The repo copy never changes except with <code>--adopt</code>. <code>apply</code> and <code>--reset</code> also run each app's settings step: GNOME shortcuts, Toshy rules, tmux and fish plugins.</figcaption>
+  </figure>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Command</th><th>Use it when</th></tr></thead>
+    <tbody>
+      <tr><td><code>./setup.sh</code></td><td>You want the help: every app, every command</td></tr>
+      <tr><td><code>./setup.sh kitty tmux code toshy</code></td><td>Apply these apps; the repo version wins. <code>all</code> applies every app</td></tr>
+      <tr><td><code>./setup.sh -i</code></td><td>New machine: answer y/n per app, see the plan, then go</td></tr>
+      <tr><td><code>./setup.sh --adopt vscode</code></td><td>This machine's version is the one to keep</td></tr>
+      <tr><td><code>./setup.sh --reset kitty</code></td><td>Try the app with its own defaults; your config stays in the repo</td></tr>
+      <tr><td><code>./setup.sh --unlink kitty</code></td><td>Stop syncing an app but keep its current settings</td></tr>
+      <tr><td><code>./setup.sh --status</code></td><td>Check nothing turned back into a plain file</td></tr>
+    </tbody>
+  </table></div>
+  <p>Other names work too: <code>code</code> = vscode, <code>toshy</code> = keyboard, <code>vim</code> = nvim, <code>fish</code> = shell, <code>btop</code> = tools, <code>docker</code> = podman, <code>workspaces</code> = desktops.</p>
+</section>
+
+<section id="apps">
+  <div class="kicker">Inside stow/</div>
+  <h2>The apps</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>App</th><th>Linked files</th><th>Also set by setup.sh</th></tr></thead>
+    <tbody>
+      <tr><td>packages</td><td>none</td><td>apt or dnf: stow, fish, tmux, kitty, ripgrep, fd, eza, gh, jq, btop, CopyQ, Tesseract; Neovim; starship</td></tr>
+      <tr><td>shell</td><td>fish <code>config.fish</code>, <code>conf.d/</code> aliases and key bindings, <code>functions/</code>, <code>.bashrc</code>, <code>.profile</code>, <code>starship.toml</code></td><td>fisher plugins</td></tr>
+      <tr><td>git</td><td>none (personal)</td><td><code>~/.gitconfig</code> from <code>examples/gitconfig.example</code>, asks name and email</td></tr>
+      <tr><td>tmux</td><td><code>.tmux.conf</code>, <code>tmux-restore</code></td><td>autostart entry, tpm and plugins; sessions restored at login, Claude panes resumed</td></tr>
+      <tr><td>nvim</td><td><code>~/.config/nvim/</code></td><td>plugins download on first start</td></tr>
+      <tr><td>kitty</td><td><code>kitty.conf</code></td><td>none</td></tr>
+      <tr><td>vscode</td><td><code>settings.json</code>, <code>keybindings.json</code></td><td>none</td></tr>
+      <tr><td>copyq</td><td>none (its config files are defaults)</td><td>autostart through XWayland, so it sees the clipboard on Wayland</td></tr>
+      <tr><td>tools</td><td><code>screen-ocr</code>, <code>blank-screen</code></td><td>btop sorted by memory</td></tr>
+      <tr><td>podman</td><td>fish <code>docker</code> wrapper</td><td>Docker Hub short names</td></tr>
+      <tr><td>keyboard</td><td>Run or Raise <code>shortcuts.conf</code>, <code>reload-shortcuts</code></td><td>GNOME shortcuts and extensions, Toshy rules and preferences, file-watch limit</td></tr>
+      <tr><td>desktops</td><td><code>desktop-rules@local</code> extension</td><td>4 fixed desktops, Alt+Caps+1…4; Teams 1, Chrome 2, kitty + VS Code 3, others 4</td></tr>
+      <tr><td>lock</td><td>fish <code>autolock</code>, <code>autologin</code></td><td>no password after screen blank or suspend</td></tr>
+      <tr><td>teams</td><td>none</td><td>Teams for Linux <code>"menubar": "hidden"</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="flow">
+  <div class="kicker">Two routines</div>
+  <h2>Day to day, and on a new machine</h2>
+  <div class="two">
+    <div style="display:grid;gap:10px;min-width:0">
+      <h3>After changing a config</h3>
+<pre><span class="c"># edit in the app, in nvim, or in ~/dotfiles: same file</span>
+cd ~/dotfiles
+git status; git diff
+git commit -am "kitty: new split keys"
+git tag m2                    <span class="c"># named checkpoint</span>
+git checkout m1 -- stow/kitty <span class="c"># roll one app back</span>
+
+<span class="c"># Toshy rules or GNOME settings changed?</span>
+reload-shortcuts              <span class="c"># Toshy: newest edit wins</span>
+./setup.sh desktops           <span class="c"># re-apply gnome/settings.sh</span></pre>
+    </div>
+    <div style="display:grid;gap:10px;min-width:0">
+      <h3>New machine</h3>
+      <ol class="steps">
+        <li><code>sudo apt install git stow</code></li>
+        <li><code>git clone &lt;repo&gt; ~/dotfiles; cd ~/dotfiles</code></li>
+        <li><code>./setup.sh -i</code>, saying yes to packages and the apps you want</li>
+        <li>Install Toshy as your normal user (commands in the README)</li>
+        <li>Log out and back in so GNOME loads the extensions</li>
+        <li><code>./setup.sh toshy</code> to copy your rules into Toshy</li>
+        <li><code>./setup.sh --status</code>: every file should say linked</li>
+      </ol>
+    </div>
+  </div>
+  <p class="note">Some apps save by writing a new file and swapping it in, which replaces the link with a plain file. If <code>--status</code> shows <code>PLAIN FILE, DIFFERS</code>, run <code>./setup.sh --adopt &lt;app&gt;</code> to take that version and link it again.</p>
+</section>
+
+<section id="layout">
+  <div class="kicker">Repo layout</div>
+  <h2>Where things live</h2>
+<pre>~/dotfiles/
+  setup.sh                 <span class="c"># the one command; no arguments = help</span>
+  README.md                <span class="c"># install commands for every program, full guide</span>
+  stow/&lt;app&gt;/…             <span class="c"># each app's files, laid out like your home folder</span>
+  keyboard/
+    toshy_user_apps.py     <span class="c"># your Toshy rules</span>
+    sync-toshy-rules.py    <span class="c"># used by reload-shortcuts</span>
+  gnome/settings.sh        <span class="c"># GNOME settings, Toshy apply, resets</span>
+  docs/                    <span class="c"># keyboard docs, this page</span>
+  examples/                <span class="c"># templates: gitconfig, 90-local.fish (personal, not tracked)</span></pre>
+</section>
+
+<footer>Not in the repo on purpose: secrets, <code>fish_variables</code>, CopyQ history, sign-ins, Toshy's generated config, system setup outside the home folder.<a href="https://www.gnu.org/software/stow/manual/stow.html">GNU Stow manual</a>.</footer>
+</div>

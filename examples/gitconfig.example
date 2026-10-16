@@ -1,0 +1,14 @@
+# Copied to ~/.gitconfig by ./setup.sh git (only if you don't have one yet).
+# ~/.gitconfig is personal: it is NOT tracked in this repo.
+[user]
+	name = Your Name
+	email = you@example.com
+[init]
+	defaultBranch = main
+# GitHub sign-in through the GitHub CLI (run: gh auth login)
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Blank the screen now (GNOME screensaver). With auto-lock off (org.gnome.desktop.screensaver
+# lock-enabled false) it wakes on any key or mouse move without asking for a password.
+exec gdbus call --session --dest org.gnome.ScreenSaver --object-path /org/gnome/ScreenSaver \
+     --method org.gnome.ScreenSaver.SetActive true >/dev/null

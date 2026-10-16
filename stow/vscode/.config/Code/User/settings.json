@@ -1,0 +1,85 @@
+{
+    "workbench.colorTheme": "GitHub Dark",
+    "terminal.integrated.initialHint": false,
+    "files.autoSave": "afterDelay",
+    "editor.fontFamily": "'FiraCode Nerd Font Mono','Droid Sans Mono', monospace",
+    "terminal.integrated.fontLigatures.enabled": true,
+    "editor.fontLigatures": true,
+    // Neovim: send no Ctrl keys to Neovim, so every Ctrl shortcut keeps its normal VS Code behaviour
+    "vscode-neovim.ctrlKeysForNormalMode": [],
+    "vscode-neovim.ctrlKeysForInsertMode": [],
+    // Neovim: jj in insert mode = Escape (VS Code handles insert mode, so the init.lua mapping doesn't apply here)
+    "vscode-neovim.compositeKeys": {
+        "jj": { "command": "vscode-neovim.escape" }
+    },
+    // Neovim: run the extension in its own process so other extensions can't make typing lag
+    "extensions.experimental.affinity": { "asvetliakov.vscode-neovim": 1 },
+    // Relative line numbers for 5j / 12dd (VS Code draws the numbers, not Neovim)
+    "editor.lineNumbers": "relative",
+    "terminal.integrated.fontSize": 12,
+    "markdown.preview.fontSize": 14,
+    "chat.fontSize": 15,
+    "chat.editor.fontSize": 14,
+    "debug.console.fontSize": 14,
+    "notebook.markup.fontSize": 14,
+    // Open Markdown files in the rendered preview (right-click the tab → Reopen Editor With → Text Editor to edit)
+    "workbench.editorAssociations": {
+        "*.md": "vscode.markdown.preview.editor"
+    },
+    // File watcher: don't watch dependency, cache and build folders. On Linux each watched folder
+    // uses one inotify watch (limit 65,536); one large project's node_modules alone used ~59,000.
+    // Plain folder patterns ("**/name") stop the watcher entering the folder at all.
+    "files.watcherExclude": {
+        // git internals
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        // JavaScript / TypeScript
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/.next": true,
+        "**/.nuxt": true,
+        "**/.svelte-kit": true,
+        "**/.angular": true,
+        "**/.turbo": true,
+        "**/.parcel-cache": true,
+        "**/.yarn/cache": true,
+        "**/.pnpm-store": true,
+        "**/coverage": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/out": true,
+        // Python
+        "**/__pycache__": true,
+        "**/.venv": true,
+        "**/venv": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/.tox": true,
+        "**/*.egg-info": true,
+        // Go
+        "**/vendor": true,
+        "**/go/pkg/mod": true,
+        // Java / Kotlin / Rust
+        "**/target": true,
+        "**/.gradle": true,
+        "**/.m2": true,
+        // Editors and general caches
+        "**/.idea": true,
+        "**/.cache": true,
+        "**/tmp": true
+    },
+    // Don't follow symlinks while searching (node_modules is full of them)
+    "search.followSymlinks": false,
+    // Skip dependency and build folders in search and Quick Open (Ctrl+P)
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true
+    },
+    // Don't download type definitions into a cache for every package
+    "typescript.disableAutomaticTypeAcquisition": true,
+    // Cap the TypeScript server at 2 GB
+    "typescript.tsserver.maxTsServerMemory": 2048,
+    // =>
+}

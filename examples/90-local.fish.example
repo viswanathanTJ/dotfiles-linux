@@ -1,0 +1,5 @@
+# Copy to ~/.config/fish/conf.d/90-local.fish for aliases that only make sense on one machine
+# (project folders, servers, machine-only tools). That file is NOT tracked in this repo.
+#   cp ~/dotfiles/examples/90-local.fish.example ~/.config/fish/conf.d/90-local.fish
+
+function proj; cd ~/WorkSpace/my-project; end

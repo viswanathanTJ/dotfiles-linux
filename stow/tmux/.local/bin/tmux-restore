@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run at login (~/.config/autostart/tmux-restore.desktop): start the tmux server detached
+# so tmux-continuum restores the last saved sessions. Does nothing if tmux is already running.
+tmux has-session 2>/dev/null || exec tmux new-session -d

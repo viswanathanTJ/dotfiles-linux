@@ -1,0 +1,57 @@
+# Don't print a new line at the start of the prompt
+add_newline = false
+
+command_timeout = 10000
+
+[time]
+disabled = false
+time_format = '%T'
+
+# Disable the package module, hiding it from the prompt completely
+[battery]
+full_symbol = "🔋"
+charging_symbol = "⚡️"
+discharging_symbol = "💀"
+
+[[battery.display]]  # "bold red" style when capacity is between 0% and 10%
+threshold = 10
+style = "bold red"
+
+[[battery.display]]  # "bold yellow" style when capacity is between 10% and 30%
+threshold = 30
+style = "bold yellow"
+
+[character]
+success_symbol = '[➜](bold green) '
+error_symbol = '[✗](bold red) '
+
+[directory]
+truncation_length = 4
+
+# docker
+[docker_context]
+symbol = "🐋 "
+disabled = false
+
+[git_commit]
+commit_hash_length = 4
+
+[git_status]
+ahead = "🏎💨"
+behind = "😰"
+diverged = "😵"
+#untracked = "🤷‍"
+stashed = "📦"
+deleted = "🗑"
+
+# kubernetes
+[kubernetes]
+symbol = "⛵ "
+style = "dimmed green"
+disabled = false
+[kubernetes.context_aliases]
+"dev.local.cluster.k8s" = "dev"
+
+[python]
+disabled = true
+

@@ -1,0 +1,66 @@
+#!/usr/bin/python3 -I
+"""Select a screen area, OCR it with Tesseract and copy the text (works on GNOME Wayland).
+
+Uses the xdg-desktop-portal Screenshot API, which opens GNOME's own screenshot
+tool, so it works where X11 screen grabbing (dpScreenOCR) does not.
+Language: OCR_LANG env var, default "eng" (e.g. OCR_LANG=eng+tam).
+"""
+import os
+import subprocess
+import urllib.parse
+
+import gi
+
+gi.require_version("Gio", "2.0")
+from gi.repository import Gio, GLib
+
+LANG = os.environ.get("OCR_LANG", "eng")
+PORTAL = "org.freedesktop.portal.Desktop"
+
+
+def notify(title, body=""):
+    subprocess.run(["notify-send", "-a", "Screen OCR", "-i", "edit-copy", title, body[:200]])
+
+
+bus = Gio.bus_get_sync(Gio.BusType.SESSION)
+loop = GLib.MainLoop()
+result = {}
+token = f"screenocr{os.getpid()}"
+sender = bus.get_unique_name()[1:].replace(".", "_")
+request_path = f"/org/freedesktop/portal/desktop/request/{sender}/{token}"
+
+
+def on_response(conn, snd, path, iface, signal, params):
+    code, results = params.unpack()
+    result["code"] = code
+    result["uri"] = results.get("uri")
+    loop.quit()
+
+
+bus.signal_subscribe(PORTAL, "org.freedesktop.portal.Request", "Response", request_path,
+                     None, Gio.DBusSignalFlags.NONE, on_response)
+bus.call_sync(PORTAL, "/org/freedesktop/portal/desktop", "org.freedesktop.portal.Screenshot",
+              "Screenshot",
+              GLib.Variant("(sa{sv})", ("", {"handle_token": GLib.Variant("s", token),
+                                             "interactive": GLib.Variant("b", True)})),
+              None, Gio.DBusCallFlags.NONE, -1, None)
+GLib.timeout_add_seconds(120, loop.quit)
+loop.run()
+
+if result.get("code") != 0 or not result.get("uri"):
+    raise SystemExit(0)  # cancelled
+
+image = urllib.parse.unquote(urllib.parse.urlparse(result["uri"]).path)
+try:
+    ocr = subprocess.run(["tesseract", image, "-", "-l", LANG],
+                         capture_output=True, text=True)
+finally:
+    os.remove(image)  # the portal saves a copy in ~/Pictures/Screenshots
+
+text = ocr.stdout.strip()
+if not text:
+    notify("No text found", ocr.stderr.strip())
+    raise SystemExit(1)
+
+subprocess.run(["wl-copy"], input=text, text=True)
+notify("Text copied", text)

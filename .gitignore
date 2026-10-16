@@ -1,0 +1,7 @@
+*.bak
+*.bak-*
+__pycache__/
+# personal, kept only on each machine (examples/ has templates)
+.gitconfig
+.gitconfig.local
+**/conf.d/90-local.fish
