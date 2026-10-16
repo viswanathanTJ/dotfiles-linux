@@ -158,6 +158,33 @@ sudo dnf install -y git stow fish tmux kitty ripgrep fd-find eza jq btop copyq \
 
 starship, the font, Neovim, tmux plugins and Toshy use the same commands as above. Install VS Code and Chrome from their `.rpm` downloads, and Teams for Linux from the `.rpm` on its GitHub releases page.
 
+## Touchpad gestures (Wayland)
+
+Set by `./setup.sh desktops` with the [Touchpad Gesture Customization](https://extensions.gnome.org/extension/7850/touchpad-gesture-customization/) extension (installed into your home folder, no sudo):
+
+| Gesture | Does |
+|---|---|
+| 3-finger swipe left / right | App switcher, like Alt+Tab (keep swiping to move, lift to pick) |
+| 4-finger swipe left / right | Switch desktop |
+| 3-finger swipe up | Overview, then the app grid |
+| Pinch | Off. The extension's defaults close a tab or window on a pinch, and its show-desktop pinch isn't detected on GNOME 46 (use Alt+F3) |
+
+Gestures need a **Wayland** session: on the login screen, choose **Ubuntu** with the gear icon, not "Ubuntu on Xorg". Check: `echo $XDG_SESSION_TYPE` prints `wayland`.
+
+The app-to-desktop extension (`desktop-rules@local`: Teams 1, Chrome 2, kitty + VS Code 3, others 4) is in the repo but **left off**: with it on, GNOME 46 crashed and logged out. Try it by hand with `gnome-extensions enable desktop-rules@local`.
+
+## If something breaks
+
+| Problem | Fix |
+|---|---|
+| Keys act strange or one key stops typing | `toshy-services-stop` (plain PC keys at once), then `toshy-services-start` |
+| Shortcuts wrong in one app (Toshy can't tell which app is focused) | `gsettings get org.gnome.shell disable-user-extensions` must be `false`; set it with `gsettings set org.gnome.shell disable-user-extensions false`, then `toshy-services-restart` |
+| GNOME logs you out by itself | An extension crashed GNOME. After a crash GNOME turns user extensions off on its own (the line above). Find it with `gnome-extensions list --enabled` and turn the newest one off: `gnome-extensions disable <uuid>` |
+| Logged out again before you can do anything | Press **Ctrl+Alt+F3** (physical Ctrl), log in, move the extension away: `mkdir -p ~/disabled-extensions; mv ~/.local/share/gnome-shell/extensions/<uuid> ~/disabled-extensions/`, then Ctrl+Alt+F2 (or F1) for the login screen |
+| A config file is broken | `git status; git diff`, then `git checkout -- stow/<app>` (undo uncommitted changes) or `git checkout v1.0.0 -- stow/<app>` (release version), or `./setup.sh --reset <app>` (app defaults). Replaced files are in `~/.dotfiles-backup/<date-time>/` |
+| Toshy rules broken after an edit | `cp ~/.config/toshy/toshy_config.py.bak-reload ~/.config/toshy/toshy_config.py; toshy-services-restart` |
+| Extra "GNOME Classic" sessions on the login screen | They come from the `gnome-shell-extensions` package (not needed here): `sudo apt remove gnome-shell-extensions` |
+
 ## Commands
 
 | Command | Does |
@@ -189,7 +216,7 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `tools` | `screen-ocr`, `blank-screen` | btop: `proc_sorting = "memory"` (the one btop setting changed) |
 | `podman` | fish `docker` → podman wrapper | Docker Hub short names |
 | `keyboard` | Run or Raise `shortcuts.conf`, fish `reload-shortcuts` | GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
-| `desktops` | `desktop-rules@local` GNOME extension | 4 fixed desktops, Super+Alt+1…4 (Alt+Caps+1…4 via Toshy), app rules on |
+| `desktops` | `desktop-rules@local` extension (installed, **left off**) | 4 fixed desktops, Super+Alt+1…4 (Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |
 | `lock` | fish `autolock`, `autologin` | No password after screen blank or suspend |
 | `teams` | — | Teams for Linux `"menubar": "hidden"` |
 

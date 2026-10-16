@@ -593,12 +593,13 @@ Test every row of the cheatsheet. If keys freeze: `toshy-services-stop`.
 | Alt+Caps+1…4 | Go to desktop 1–4 |
 | Alt+Shift+H / L | Desktop to the left / right |
 | Alt+Win+H / L | Move the window to the previous / next desktop |
-| 3-finger swipe left / right (Wayland only) | Desktop to the left / right |
+| 3-finger swipe left / right (Wayland only) | App switcher, like Alt+Tab (Touchpad Gesture Customization extension) |
+| 4-finger swipe left / right (Wayland only) | Desktop to the left / right |
 | 3-finger swipe up, up again (Wayland only) | Overview (all desktops), then the app grid |
 
-GNOME's touchpad gestures only work in a **Wayland** session. On the login screen, choose **Ubuntu** with the gear icon, not "Ubuntu on Xorg". There's no pinch gesture for the overview in GNOME 46.
+GNOME's touchpad gestures only work in a **Wayland** session. On the login screen, choose **Ubuntu** with the gear icon, not "Ubuntu on Xorg". Pinch gestures are off: they aren't detected reliably on GNOME 46 (show desktop: Alt+F3).
 
-**App rules** come from a small local extension, `~/.local/share/gnome-shell/extensions/desktop-rules@local/extension.js`:
+**App rules** (currently **off**: with it on, GNOME 46 crashed and logged out; turn on by hand with `gnome-extensions enable desktop-rules@local`) come from a small local extension, `~/.local/share/gnome-shell/extensions/desktop-rules@local/extension.js`:
 
 | Desktop | Apps |
 |---|---|

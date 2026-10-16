@@ -24,7 +24,7 @@ describe() {
         tools)    echo "Screen OCR and blank-screen scripts; btop sorted by memory" ;;
         podman)   echo "docker -> podman fish wrapper" ;;
         keyboard) echo "Mac-style keys: Toshy rules + preferences, GNOME shortcuts, Run or Raise (install Toshy first)" ;;
-        desktops) echo "4 fixed desktops, Alt+Caps+1..4, app rules: Teams 1, Chrome 2, kitty + VS Code 3, others 4" ;;
+        desktops) echo "4 fixed desktops, Alt+Caps+1..4, touchpad: 3-finger app switcher, 4-finger desktops (Wayland)" ;;
         lock)     echo "No password after screen blank or suspend; autolock / autologin commands" ;;
         teams)    echo "Teams for Linux: menu bar hidden (fixes Win+Backspace word delete)" ;;
     esac

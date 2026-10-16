@@ -116,14 +116,23 @@ gnome_desktops() {
     for i in 1 2 3 4; do
         run "gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-$i \"['<Super><Alt>$i']\""
     done
-    say "App rules extension desktop-rules@local: Teams 1, Chrome 2, kitty + VS Code 3, others 4"
     run "gsettings set org.gnome.shell disable-user-extensions false"
-    set_extensions +desktop-rules@local -auto-move-windows@gnome-shell-extensions.gcampax.github.com
-    local ver; ver=$(gnome_ver)
-    if [ -n "$ver" ] && ! grep -q "\"$ver\"" "$HERE/stow/desktops/.local/share/gnome-shell/extensions/desktop-rules@local/metadata.json"; then
-        echo "    Note: desktop-rules lists GNOME 46; this is GNOME $ver. Add \"$ver\" to shell-version in"
-        echo "    stow/desktops/.local/share/gnome-shell/extensions/desktop-rules@local/metadata.json (same API on 45-48)."
-    fi
+    # desktop-rules@local (app -> desktop rules) stays OFF: with it on, GNOME 46 crashed and logged out.
+    # Turn it on by hand to try it: gnome-extensions enable desktop-rules@local
+    set_extensions -desktop-rules@local -auto-move-windows@gnome-shell-extensions.gcampax.github.com
+
+    say "Touchpad (Wayland): 3-finger left/right = window switcher, 4-finger left/right = desktops"
+    local tgc=touchpad-gesture-customization@coooolapps.com
+    gnome-extensions info $tgc >/dev/null 2>&1 || install_extension 7850 $tgc
+    set_extensions +$tgc
+    local tp=/org/gnome/shell/extensions/touchpad-gesture-customization
+    run "dconf write $tp/horizontal-swipe-3-fingers-gesture \"'WINDOW_SWITCHING'\""
+    run "dconf write $tp/horizontal-swipe-4-fingers-gesture \"'WORKSPACE_SWITCHING'\""
+    run "dconf write $tp/vertical-swipe-3-fingers-gesture \"'OVERVIEW_NAVIGATION'\""
+    # pinch off: its defaults close a tab / window (too easy to hit), and show-desktop pinch isn't
+    # detected on GNOME 46 here (use Alt+F3)
+    run "dconf write $tp/pinch-3-finger-gesture \"'NONE'\""
+    run "dconf write $tp/pinch-4-finger-gesture \"'NONE'\""
 }
 
 # ---------------------------------------------------------------- lock
@@ -199,7 +208,8 @@ reset_desktops_settings() {
     run "gsettings reset org.gnome.desktop.wm.preferences num-workspaces"
     local i
     for i in 1 2 3 4; do run "gsettings reset org.gnome.desktop.wm.keybindings switch-to-workspace-$i"; done
-    set_extensions -desktop-rules@local
+    set_extensions -desktop-rules@local -touchpad-gesture-customization@coooolapps.com
+    run "dconf reset -f /org/gnome/shell/extensions/touchpad-gesture-customization/"
 }
 
 reset_lock_settings() {

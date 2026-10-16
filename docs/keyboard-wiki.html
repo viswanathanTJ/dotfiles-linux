@@ -709,11 +709,12 @@ end</pre></div>
     <tr><td>Alt+Caps+1…4</td><td>Go to desktop 1–4</td></tr>
     <tr><td>Alt+Shift+H / L</td><td>Desktop to the left / right</td></tr>
     <tr><td>Alt+Win+H / L</td><td>Move the window to the previous / next desktop</td></tr>
-    <tr><td>3-finger swipe left / right (Wayland only)</td><td>Desktop to the left / right</td></tr>
+    <tr><td>3-finger swipe left / right (Wayland only)</td><td>App switcher, like Alt+Tab (Touchpad Gesture Customization extension)</td></tr>
+    <tr><td>4-finger swipe left / right (Wayland only)</td><td>Desktop to the left / right</td></tr>
     <tr><td>3-finger swipe up, up again (Wayland only)</td><td>Overview (all desktops), then the app grid</td></tr>
   </tbody></table></div>
-  <p>GNOME's touchpad gestures only work in a <strong>Wayland</strong> session. On the login screen, choose <strong>Ubuntu</strong> with the gear icon, not "Ubuntu on Xorg". There's no pinch gesture for the overview in GNOME 46.</p>
-  <p><strong>App rules</strong> come from a small local extension, <code>~/.local/share/gnome-shell/extensions/desktop-rules@local/extension.js</code>:</p>
+  <p>GNOME's touchpad gestures only work in a <strong>Wayland</strong> session. On the login screen, choose <strong>Ubuntu</strong> with the gear icon, not "Ubuntu on Xorg". Pinch gestures are off: they aren't detected reliably on GNOME 46 (show desktop: Alt+F3).</p>
+  <p><strong>App rules</strong> (currently <strong>off</strong>: with it on, GNOME 46 crashed and logged out) come from a small local extension, <code>~/.local/share/gnome-shell/extensions/desktop-rules@local/extension.js</code>:</p>
   <div class="tablewrap"><table><thead><tr><th>Desktop</th><th>Apps</th></tr></thead><tbody>
     <tr><td>1</td><td>Teams for Linux</td></tr>
     <tr><td>2</td><td>Chrome</td></tr>
