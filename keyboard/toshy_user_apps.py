@@ -35,6 +35,7 @@ keymap("User app launchers", {
     C("RC-LC-k"):            C("C-Alt-Super-k"),                   # kitty (second key)
     C("RC-LC-w"):            C("C-Alt-Super-w"),                   # ZapZap
     C("RC-LC-m"):            C("C-Alt-Super-m"),                   # Teams for Linux
+    C("RC-LC-n"):            C("C-Alt-Super-n"),                   # Telegram
     C("RC-LC-e"):            C("C-Alt-e"),                   # Teams: search (Ctrl+Alt+E)
     C("RC-LC-x"):            C("C-Alt-Super-x"),                   # Chrome (second key)
     # Alt+Caps+L (or Alt+Left Ctrl+L) -> Ctrl+Alt+Shift+L = GNOME shortcut "Blank screen"
