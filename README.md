@@ -216,7 +216,7 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `tools` | `screen-ocr`, `blank-screen` | btop: `proc_sorting = "memory"` (the one btop setting changed) |
 | `podman` | fish `docker` → podman wrapper | Docker Hub short names |
 | `keyboard` | Run or Raise `shortcuts.conf`, fish `reload-shortcuts` | GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
-| `desktops` | `desktop-rules@local` extension (installed, **left off**) | 4 fixed desktops, Super+Alt+1…4 (Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |
+| `desktops` | `desktop-rules@local` extension (installed, **left off**) | 4 fixed desktops, Super+Alt+1…4 (Left Ctrl+1…4, Caps+1…4 and Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |
 | `lock` | fish `autolock`, `autologin` | No password after screen blank or suspend |
 | `teams` | — | Teams for Linux `"menubar": "hidden"` |
 

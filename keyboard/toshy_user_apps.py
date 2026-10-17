@@ -99,6 +99,31 @@ keymap("User Caps word erase", {
     not ctx_app_is_terminal and not ctx_app_is_remote
 )
 
+keymap("User desktop numbers", {
+    # Mac Control+1..4 = desktop 1..4: physical Left Ctrl (Super in apps, Ctrl in terminals) or Caps (Ctrl)
+    # -> Super+Alt+1..4 = GNOME switch-to-workspace-1..4. Tabs by number are on Alt (Cmd) + 1..9.
+    C("Super-Key_1"):           C("Super-Alt-Key_1"),
+    C("Super-Key_2"):           C("Super-Alt-Key_2"),
+    C("Super-Key_3"):           C("Super-Alt-Key_3"),
+    C("Super-Key_4"):           C("Super-Alt-Key_4"),
+    C("LC-Key_1"):              C("Super-Alt-Key_1"),
+    C("LC-Key_2"):              C("Super-Alt-Key_2"),
+    C("LC-Key_3"):              C("Super-Alt-Key_3"),
+    C("LC-Key_4"):              C("Super-Alt-Key_4"),
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_remote
+)
+
+keymap("User desktop arrows", {
+    # Mac Control+Left/Right = desktop left/right (apps only; in terminals Ctrl+Left/Right jumps words)
+    C("Super-Left"):            C("Super-Page_Up"),
+    C("Super-Right"):           C("Super-Page_Down"),
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_terminal and not ctx_app_is_remote
+)
+
 keymap("User dock apps", {
     # Win (Option) + 1..9 -> Super+1..9 = open or switch to dock app 1..9 (like Windows).
     # Alt (Cmd) + 1..9 is left to Toshy's default, Ctrl+1..9 = tab 1..9 in Chrome, VS Code, kitty (like a Mac).

@@ -29,7 +29,9 @@ Toshy's internal names in its config: `RC` = Cmd (Toshy turns Alt into Right Ctr
 | Alt+A / S / F | Select all / save / find | Toshy |
 | Alt+T / W / N | New tab / close tab / new window | Toshy |
 | Alt+Q | Quit / close window (Alt+F4) | Toshy (GNOME `close` also has `<Alt>q`) |
-| **Alt+1…9**, Caps+1…9 | Tab 1–9 in Chrome, VS Code and kitty (Cmd+number, like a Mac) | Toshy default → Ctrl+number; kitty `map ctrl+N goto_tab N` |
+| **Alt+1…9** | Tab 1–9 in Chrome, VS Code and kitty (Cmd+number, like a Mac) | Toshy default → Ctrl+number; kitty `map ctrl+N goto_tab N` |
+| **Left Ctrl+1…4**, Caps+1…4 | Go to desktop 1–4 (Mac Control+number), in every app | Toshy "User desktop numbers" → Super+Alt+N → GNOME |
+| **Left Ctrl+← / →** | Desktop to the left / right (apps only; in terminals Ctrl+arrows jump words) | Toshy "User desktop arrows" → Super+Page Up/Down |
 | Caps+Tab, Left Ctrl+Tab | Next tab (add Shift for previous) | Toshy custom "User tab switching" (apps) and "User terminal tab switching" (terminals) |
 | Alt+Shift+[ / ] | Previous / next tab | Toshy |
 | **Alt+Space** | **Activities / Launchpad** | Toshy → Shift+Ctrl+Space → GNOME `toggle-overview` |
@@ -252,6 +254,31 @@ keymap("User Caps word erase", {
     # Ctrl+W = close tab. On a Mac, Ctrl+W never closes; Cmd+W (Alt+W) does.
     # Make Caps+W erase the previous word, like Ctrl+W in a terminal.
     C("LC-w"):                  C("C-Backspace"),               # erase previous word
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_terminal and not ctx_app_is_remote
+)
+
+keymap("User desktop numbers", {
+    # Mac Control+1..4 = desktop 1..4: physical Left Ctrl (Super in apps, Ctrl in terminals) or Caps (Ctrl)
+    # -> Super+Alt+1..4 = GNOME switch-to-workspace-1..4. Tabs by number are on Alt (Cmd) + 1..9.
+    C("Super-Key_1"):           C("Super-Alt-Key_1"),
+    C("Super-Key_2"):           C("Super-Alt-Key_2"),
+    C("Super-Key_3"):           C("Super-Alt-Key_3"),
+    C("Super-Key_4"):           C("Super-Alt-Key_4"),
+    C("LC-Key_1"):              C("Super-Alt-Key_1"),
+    C("LC-Key_2"):              C("Super-Alt-Key_2"),
+    C("LC-Key_3"):              C("Super-Alt-Key_3"),
+    C("LC-Key_4"):              C("Super-Alt-Key_4"),
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_remote
+)
+
+keymap("User desktop arrows", {
+    # Mac Control+Left/Right = desktop left/right (apps only; in terminals Ctrl+Left/Right jumps words)
+    C("Super-Left"):            C("Super-Page_Up"),
+    C("Super-Right"):           C("Super-Page_Down"),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     not ctx_app_is_terminal and not ctx_app_is_remote
