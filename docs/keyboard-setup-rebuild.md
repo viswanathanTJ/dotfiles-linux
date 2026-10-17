@@ -46,11 +46,11 @@ Toshy's internal names in its config: `RC` = Cmd (Toshy turns Alt into Right Ctr
 | **Caps+Shift+Esc**, Left Ctrl+Shift+Esc | **Force Quit**: opens btop in kitty (f filter, e tree, t terminate, k kill, q quit) | GNOME custom "Force Quit (btop)" on Ctrl+Shift+Esc (`kitty --title "Force Quit (btop)" btop`); Toshy rule `Shift-Super-Esc` for Left Ctrl in apps |
 | **Alt+Caps+L** | **Blank the screen**, no password to wake (while `autolock off`) | Toshy → Ctrl+Alt+Shift+L → GNOME custom "Blank screen" (`~/.local/bin/blank-screen`) |
 | **Alt+Caps+Q** | **Lock the screen**, like macOS ⌃⌘Q (Alt + Left Ctrl + Q works too) | Toshy → Super+L → GNOME `media-keys screensaver` |
-| **Alt+Caps+B** or **X** | Focus or launch **Chrome** | Toshy → Ctrl+Alt+B → Run or Raise |
-| **Alt+Caps+C** | Focus or launch **VS Code** | Toshy → Ctrl+Alt+C → Run or Raise |
+| **Alt+Caps+B** or **X** | Focus or launch **Chrome** | Toshy → Ctrl+Alt+Super+B → Run or Raise |
+| **Alt+Caps+C** | Focus or launch **VS Code** | Toshy → Ctrl+Alt+Super+C → Run or Raise |
 | **Alt+Caps+T** or **K** | Focus or launch **kitty** | Toshy → Ctrl+Alt+T / K → Run or Raise |
-| **Alt+Caps+W** | Focus or launch **ZapZap** | Toshy → Ctrl+Alt+W → Run or Raise |
-| **Alt+Caps+M** | Focus or launch **Teams for Linux** | Toshy → Ctrl+Alt+M → Run or Raise |
+| **Alt+Caps+W** | Focus or launch **ZapZap** | Toshy → Ctrl+Alt+Super+W → Run or Raise |
+| **Alt+Caps+M** | Focus or launch **Teams for Linux** | Toshy → Ctrl+Alt+Super+M → Run or Raise |
 | **Alt+Caps+E** | Teams: search box (Teams shows Ctrl+Alt+E) | Toshy → Ctrl+Alt+E → Teams |
 | **Alt+Shift+2** | **Screen OCR**: select an area, its text is copied | Toshy → Super+Shift+T → GNOME custom "Screen OCR" |
 | Alt+Shift+3 / 4 / 5 | Screenshot: screen / window / tool | Toshy → Shift+Print / Alt+Print / Print |
@@ -186,24 +186,17 @@ keymap("User Caps double tap", {
 
 
 keymap("User app launchers", {
-    # Cmd+Ctrl+B (physical Alt + Caps, or Alt + Left Ctrl) -> Ctrl+Alt+B,
-    # which the GNOME "Run or Raise" extension uses to focus or launch Chrome.
-    C("RC-LC-b"):               C("C-Alt-b"),                   # Caps held = literal Ctrl (Caps mode esc_and_lctrl)
-    C("RC-Super-b"):            C("C-Alt-b"),                   # physical Left Ctrl in GUI apps (Mac Control = Super)
-    C("RC-LC-c"):            C("C-Alt-c"),                   # VS Code
-    C("RC-Super-c"):         C("C-Alt-c"),
-    C("RC-LC-t"):            C("C-Alt-t"),                   # kitty
-    C("RC-Super-t"):         C("C-Alt-t"),
-    C("RC-LC-k"):            C("C-Alt-k"),                   # kitty (second key)
-    C("RC-Super-k"):         C("C-Alt-k"),
-    C("RC-LC-w"):            C("C-Alt-w"),                   # ZapZap
-    C("RC-Super-w"):         C("C-Alt-w"),
-    C("RC-LC-m"):            C("C-Alt-m"),                   # Teams for Linux
-    C("RC-Super-m"):         C("C-Alt-m"),
+    # Alt+Caps+letter (Cmd+Ctrl+letter) -> Ctrl+Alt+Super+letter, which the GNOME "Run or Raise"
+    # extension uses to focus or launch an app. A combo nobody types, so real Ctrl+Alt+letter
+    # (Win+Caps+letter) reaches apps. Only Alt+Caps launches; Alt+Left Ctrl+letter does not.
+    C("RC-LC-b"):            C("C-Alt-Super-b"),                   # Chrome
+    C("RC-LC-c"):            C("C-Alt-Super-c"),                   # VS Code
+    C("RC-LC-t"):            C("C-Alt-Super-t"),                   # kitty
+    C("RC-LC-k"):            C("C-Alt-Super-k"),                   # kitty (second key)
+    C("RC-LC-w"):            C("C-Alt-Super-w"),                   # ZapZap
+    C("RC-LC-m"):            C("C-Alt-Super-m"),                   # Teams for Linux
     C("RC-LC-e"):            C("C-Alt-e"),                   # Teams: search (Ctrl+Alt+E)
-    C("RC-Super-e"):         C("C-Alt-e"),
-    C("RC-LC-x"):            C("C-Alt-x"),                   # Chrome (second key)
-    C("RC-Super-x"):         C("C-Alt-x"),
+    C("RC-LC-x"):            C("C-Alt-Super-x"),                   # Chrome (second key)
     # Alt+Caps+L (or Alt+Left Ctrl+L) -> Ctrl+Alt+Shift+L = GNOME shortcut "Blank screen"
     # (~/.local/bin/blank-screen; no password while `autolock off`)
     C("RC-LC-l"):            C("C-Alt-Shift-l"),
@@ -370,19 +363,19 @@ keymap("User hardware keys", {
 # Focus an existing window whose wm_class matches, otherwise run the command.
 # To reload after editing: gnome-extensions disable run-or-raise@edvard.cz && gnome-extensions enable run-or-raise@edvard.cz
 
-# Ctrl+Alt+B (Alt+Caps+B): Chrome. Exact wm_class, so Chrome web apps (Outlook, Teams) aren't matched.
-<Control><Alt>b,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
-<Control><Alt>x,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
+# Ctrl+Alt+Super+B (Alt+Caps+B): Chrome. Exact wm_class, so Chrome web apps (Outlook, Teams) aren't matched.
+<Control><Alt><Super>b,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
+<Control><Alt><Super>x,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
 
-# Ctrl+Alt+C (Alt+Caps+C): VS Code
-<Control><Alt>c,gtk-launch com.microsoft.VSCode,/^(code|Code|com\.microsoft\.VSCode)$/,
-# Ctrl+Alt+T (Alt+Caps+T): kitty
-<Control><Alt>t,gtk-launch kitty,/^kitty$/,
-<Control><Alt>k,gtk-launch kitty,/^kitty$/,
-# Ctrl+Alt+W (Alt+Caps+W): ZapZap (WhatsApp)
-<Control><Alt>w,gtk-launch com.rtosta.zapzap,/^(zapzap|ZapZap|com\.rtosta\.zapzap)$/,
-# Ctrl+Alt+M (Alt+Caps+M): Teams for Linux
-<Control><Alt>m,gtk-launch teams-for-linux,/^teams-for-linux$/,
+# Ctrl+Alt+Super+C (Alt+Caps+C): VS Code
+<Control><Alt><Super>c,gtk-launch com.microsoft.VSCode,/^(code|Code|com\.microsoft\.VSCode)$/,
+# Ctrl+Alt+Super+T (Alt+Caps+T): kitty
+<Control><Alt><Super>t,gtk-launch kitty,/^kitty$/,
+<Control><Alt><Super>k,gtk-launch kitty,/^kitty$/,
+# Ctrl+Alt+Super+W (Alt+Caps+W): ZapZap (WhatsApp)
+<Control><Alt><Super>w,gtk-launch com.rtosta.zapzap,/^(zapzap|ZapZap|com\.rtosta\.zapzap)$/,
+# Ctrl+Alt+Super+M (Alt+Caps+M): Teams for Linux
+<Control><Alt><Super>m,gtk-launch teams-for-linux,/^teams-for-linux$/,
 ```
 
 ### 7. GNOME settings

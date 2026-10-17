@@ -200,14 +200,14 @@ html{scroll-behavior:smooth}
   <h3>Focus or launch an app</h3>
   <p>If the app is open, its window comes to the front (press again to cycle its windows). If not, it launches.</p>
   <div class="tablewrap"><table class="sc"><thead><tr><th>Press</th><th>App</th><th>Path</th></tr></thead><tbody>
-    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>B</kbd> or <kbd>X</kbd></td><td>Chrome</td><td class="via">Toshy → Ctrl+Alt+B → Run or Raise</td></tr>
-    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>C</kbd></td><td>VS Code</td><td class="via">Toshy → Ctrl+Alt+C → Run or Raise</td></tr>
-    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>T</kbd> or <kbd>K</kbd></td><td>kitty</td><td class="via">Toshy → Ctrl+Alt+T/K → Run or Raise</td></tr>
-    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>W</kbd></td><td>ZapZap (WhatsApp)</td><td class="via">Toshy → Ctrl+Alt+W → Run or Raise</td></tr>
-    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>M</kbd></td><td>Teams for Linux</td><td class="via">Toshy → Ctrl+Alt+M → Run or Raise</td></tr>
+    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>B</kbd> or <kbd>X</kbd></td><td>Chrome</td><td class="via">Toshy → Ctrl+Alt+Super+B → Run or Raise</td></tr>
+    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>C</kbd></td><td>VS Code</td><td class="via">Toshy → Ctrl+Alt+Super+C → Run or Raise</td></tr>
+    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>T</kbd> or <kbd>K</kbd></td><td>kitty</td><td class="via">Toshy → Ctrl+Alt+Super+T/K → Run or Raise</td></tr>
+    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>W</kbd></td><td>ZapZap (WhatsApp)</td><td class="via">Toshy → Ctrl+Alt+Super+W → Run or Raise</td></tr>
+    <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>M</kbd></td><td>Teams for Linux</td><td class="via">Toshy → Ctrl+Alt+Super+M → Run or Raise</td></tr>
     <tr><td><kbd>Alt</kbd><span class="plus">+</span><kbd>Caps</kbd><span class="plus">+</span><kbd>E</kbd></td><td>Teams: search box (Teams shows Ctrl+Alt+E)</td><td class="via">Toshy → Ctrl+Alt+E → Teams</td></tr>
   </tbody></table></div>
-  <p class="via">Alt + Left Ctrl + letter works too. <span class="tag toshy">Toshy</span> <span class="tag ext">Run or Raise</span></p>
+  <p class="via">Only Alt+Caps launches; real Ctrl+Alt+letter (Win+Caps+letter) goes to the app. <span class="tag toshy">Toshy</span> <span class="tag ext">Run or Raise</span></p>
 
   <h3>Screenshots, OCR and clipboard</h3>
   <div class="tablewrap"><table class="sc"><thead><tr><th>Press</th><th>Does</th><th>Source</th></tr></thead><tbody>
@@ -333,24 +333,17 @@ keymap("User Caps double tap", {
 
 
 keymap("User app launchers", {
-    # Cmd+Ctrl+B (physical Alt + Caps, or Alt + Left Ctrl) -&gt; Ctrl+Alt+B,
-    # which the GNOME "Run or Raise" extension uses to focus or launch Chrome.
-    C("RC-LC-b"):               C("C-Alt-b"),                   # Caps held = literal Ctrl (Caps mode esc_and_lctrl)
-    C("RC-Super-b"):            C("C-Alt-b"),                   # physical Left Ctrl in GUI apps (Mac Control = Super)
-    C("RC-LC-c"):            C("C-Alt-c"),                   # VS Code
-    C("RC-Super-c"):         C("C-Alt-c"),
-    C("RC-LC-t"):            C("C-Alt-t"),                   # kitty
-    C("RC-Super-t"):         C("C-Alt-t"),
-    C("RC-LC-k"):            C("C-Alt-k"),                   # kitty (second key)
-    C("RC-Super-k"):         C("C-Alt-k"),
-    C("RC-LC-w"):            C("C-Alt-w"),                   # ZapZap
-    C("RC-Super-w"):         C("C-Alt-w"),
-    C("RC-LC-m"):            C("C-Alt-m"),                   # Teams for Linux
-    C("RC-Super-m"):         C("C-Alt-m"),
+    # Alt+Caps+letter (Cmd+Ctrl+letter) -&gt; Ctrl+Alt+Super+letter, which the GNOME "Run or Raise"
+    # extension uses to focus or launch an app. A combo nobody types, so real Ctrl+Alt+letter
+    # (Win+Caps+letter) reaches apps. Only Alt+Caps launches; Alt+Left Ctrl+letter does not.
+    C("RC-LC-b"):            C("C-Alt-Super-b"),                   # Chrome
+    C("RC-LC-c"):            C("C-Alt-Super-c"),                   # VS Code
+    C("RC-LC-t"):            C("C-Alt-Super-t"),                   # kitty
+    C("RC-LC-k"):            C("C-Alt-Super-k"),                   # kitty (second key)
+    C("RC-LC-w"):            C("C-Alt-Super-w"),                   # ZapZap
+    C("RC-LC-m"):            C("C-Alt-Super-m"),                   # Teams for Linux
     C("RC-LC-e"):            C("C-Alt-e"),                   # Teams: search (Ctrl+Alt+E)
-    C("RC-Super-e"):         C("C-Alt-e"),
-    C("RC-LC-x"):            C("C-Alt-x"),                   # Chrome (second key)
-    C("RC-Super-x"):         C("C-Alt-x"),
+    C("RC-LC-x"):            C("C-Alt-Super-x"),                   # Chrome (second key)
     # Alt+Caps+L (or Alt+Left Ctrl+L) -&gt; Ctrl+Alt+Shift+L = GNOME shortcut "Blank screen"
     # (~/.local/bin/blank-screen; no password while `autolock off`)
     C("RC-LC-l"):            C("C-Alt-Shift-l"),
@@ -531,19 +524,19 @@ swap_spotlight_and_input = False</pre></div>
 # Focus an existing window whose wm_class matches, otherwise run the command.
 # To reload after editing: gnome-extensions disable run-or-raise@edvard.cz &amp;&amp; gnome-extensions enable run-or-raise@edvard.cz
 
-# Ctrl+Alt+B (Alt+Caps+B): Chrome. Exact wm_class, so Chrome web apps (Outlook, Teams) aren't matched.
-&lt;Control&gt;&lt;Alt&gt;b,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
-&lt;Control&gt;&lt;Alt&gt;x,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
+# Ctrl+Alt+Super+B (Alt+Caps+B): Chrome. Exact wm_class, so Chrome web apps (Outlook, Teams) aren't matched.
+&lt;Control&gt;&lt;Alt&gt;&lt;Super&gt;b,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
+&lt;Control&gt;&lt;Alt&gt;&lt;Super&gt;x,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
 
-# Ctrl+Alt+C (Alt+Caps+C): VS Code
-&lt;Control&gt;&lt;Alt&gt;c,gtk-launch com.microsoft.VSCode,/^(code|Code|com\.microsoft\.VSCode)$/,
-# Ctrl+Alt+T (Alt+Caps+T): kitty
-&lt;Control&gt;&lt;Alt&gt;t,gtk-launch kitty,/^kitty$/,
-&lt;Control&gt;&lt;Alt&gt;k,gtk-launch kitty,/^kitty$/,
-# Ctrl+Alt+W (Alt+Caps+W): ZapZap (WhatsApp)
-&lt;Control&gt;&lt;Alt&gt;w,gtk-launch com.rtosta.zapzap,/^(zapzap|ZapZap|com\.rtosta\.zapzap)$/,
-# Ctrl+Alt+M (Alt+Caps+M): Teams for Linux
-&lt;Control&gt;&lt;Alt&gt;m,gtk-launch teams-for-linux,/^teams-for-linux$/,</pre></div>
+# Ctrl+Alt+Super+C (Alt+Caps+C): VS Code
+&lt;Control&gt;&lt;Alt&gt;&lt;Super&gt;c,gtk-launch com.microsoft.VSCode,/^(code|Code|com\.microsoft\.VSCode)$/,
+# Ctrl+Alt+Super+T (Alt+Caps+T): kitty
+&lt;Control&gt;&lt;Alt&gt;&lt;Super&gt;t,gtk-launch kitty,/^kitty$/,
+&lt;Control&gt;&lt;Alt&gt;&lt;Super&gt;k,gtk-launch kitty,/^kitty$/,
+# Ctrl+Alt+Super+W (Alt+Caps+W): ZapZap (WhatsApp)
+&lt;Control&gt;&lt;Alt&gt;&lt;Super&gt;w,gtk-launch com.rtosta.zapzap,/^(zapzap|ZapZap|com\.rtosta\.zapzap)$/,
+# Ctrl+Alt+Super+M (Alt+Caps+M): Teams for Linux
+&lt;Control&gt;&lt;Alt&gt;&lt;Super&gt;m,gtk-launch teams-for-linux,/^teams-for-linux$/,</pre></div>
 
   <h3 id="cfg-gnome">GNOME settings script</h3>
   <p>Every keyboard-related GNOME change on this machine, as commands. Safe to re-run.</p>

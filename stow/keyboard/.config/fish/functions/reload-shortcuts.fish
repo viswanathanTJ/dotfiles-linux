@@ -22,14 +22,13 @@ function reload-shortcuts --description 'Reload Run or Raise and Toshy after edi
     end
     rm -f ~/.config/toshy/__pycache__/toshy_config.*.pyc
 
-    # Every Ctrl+Alt+<letter> in Run or Raise needs a Toshy rule RC-LC-<letter> (Alt+Caps+<letter>),
-    # otherwise Toshy sends Alt+Caps+<letter> as Ctrl+<letter> and Run or Raise never sees it
-    for key in (string match -rg '^<Control><Alt>([a-z0-9])' < ~/.config/run-or-raise/shortcuts.conf)
+    # Every Ctrl+Alt+Super+<letter> in Run or Raise needs a Toshy rule RC-LC-<letter> (Alt+Caps+<letter>),
+    # otherwise nothing sends that combo and the launcher never fires
+    for key in (string match -rg '^<Control><Alt><Super>([a-z0-9])' < ~/.config/run-or-raise/shortcuts.conf)
         if not string match -q "*C(\"RC-LC-$key\")*" < $cfg
-            echo "Warning: Run or Raise has Ctrl+Alt+$key but Toshy has no rule for Alt+Caps+$key."
+            echo "Warning: Run or Raise has Ctrl+Alt+Super+$key but Toshy has no rule for Alt+Caps+$key."
             echo "  Add to keymap \"User app launchers\" in $cfg:"
-            echo "    C(\"RC-LC-$key\"):            C(\"C-Alt-$key\"),"
-            echo "    C(\"RC-Super-$key\"):         C(\"C-Alt-$key\"),"
+            echo "    C(\"RC-LC-$key\"):            C(\"C-Alt-Super-$key\"),"
         end
     end
 

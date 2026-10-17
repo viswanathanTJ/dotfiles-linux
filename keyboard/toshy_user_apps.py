@@ -26,24 +26,17 @@ keymap("User Caps double tap", {
 
 
 keymap("User app launchers", {
-    # Cmd+Ctrl+B (physical Alt + Caps, or Alt + Left Ctrl) -> Ctrl+Alt+B,
-    # which the GNOME "Run or Raise" extension uses to focus or launch Chrome.
-    C("RC-LC-b"):               C("C-Alt-b"),                   # Caps held = literal Ctrl (Caps mode esc_and_lctrl)
-    C("RC-Super-b"):            C("C-Alt-b"),                   # physical Left Ctrl in GUI apps (Mac Control = Super)
-    C("RC-LC-c"):            C("C-Alt-c"),                   # VS Code
-    C("RC-Super-c"):         C("C-Alt-c"),
-    C("RC-LC-t"):            C("C-Alt-t"),                   # kitty
-    C("RC-Super-t"):         C("C-Alt-t"),
-    C("RC-LC-k"):            C("C-Alt-k"),                   # kitty (second key)
-    C("RC-Super-k"):         C("C-Alt-k"),
-    C("RC-LC-w"):            C("C-Alt-w"),                   # ZapZap
-    C("RC-Super-w"):         C("C-Alt-w"),
-    C("RC-LC-m"):            C("C-Alt-m"),                   # Teams for Linux
-    C("RC-Super-m"):         C("C-Alt-m"),
+    # Alt+Caps+letter (Cmd+Ctrl+letter) -> Ctrl+Alt+Super+letter, which the GNOME "Run or Raise"
+    # extension uses to focus or launch an app. A combo nobody types, so real Ctrl+Alt+letter
+    # (Win+Caps+letter) reaches apps. Only Alt+Caps launches; Alt+Left Ctrl+letter does not.
+    C("RC-LC-b"):            C("C-Alt-Super-b"),                   # Chrome
+    C("RC-LC-c"):            C("C-Alt-Super-c"),                   # VS Code
+    C("RC-LC-t"):            C("C-Alt-Super-t"),                   # kitty
+    C("RC-LC-k"):            C("C-Alt-Super-k"),                   # kitty (second key)
+    C("RC-LC-w"):            C("C-Alt-Super-w"),                   # ZapZap
+    C("RC-LC-m"):            C("C-Alt-Super-m"),                   # Teams for Linux
     C("RC-LC-e"):            C("C-Alt-e"),                   # Teams: search (Ctrl+Alt+E)
-    C("RC-Super-e"):         C("C-Alt-e"),
-    C("RC-LC-x"):            C("C-Alt-x"),                   # Chrome (second key)
-    C("RC-Super-x"):         C("C-Alt-x"),
+    C("RC-LC-x"):            C("C-Alt-Super-x"),                   # Chrome (second key)
     # Alt+Caps+L (or Alt+Left Ctrl+L) -> Ctrl+Alt+Shift+L = GNOME shortcut "Blank screen"
     # (~/.local/bin/blank-screen; no password while `autolock off`)
     C("RC-LC-l"):            C("C-Alt-Shift-l"),
