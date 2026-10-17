@@ -129,6 +129,9 @@ gnome_desktops() {
     run "dconf write $tp/horizontal-swipe-3-fingers-gesture \"'WINDOW_SWITCHING'\""
     run "dconf write $tp/horizontal-swipe-4-fingers-gesture \"'WORKSPACE_SWITCHING'\""
     run "dconf write $tp/vertical-swipe-3-fingers-gesture \"'OVERVIEW_NAVIGATION'\""
+    # 3-finger switcher lists windows from every desktop, like Alt+Tab
+    run "dconf write $tp/alttab-all-workspaces true"
+    run "gsettings set org.gnome.shell.window-switcher current-workspace-only false"
     # pinch off: its defaults close a tab / window (too easy to hit), and show-desktop pinch isn't
     # detected on GNOME 46 here (use Alt+F3)
     run "dconf write $tp/pinch-3-finger-gesture \"'NONE'\""
