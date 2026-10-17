@@ -1,6 +1,26 @@
 ###  SLICE_MARK_START: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
 
 
+# Caps: hold = real Ctrl, single tap = nothing, quick double tap = Esc.
+# Needs Toshy's CapsLock mode "caps_is_caps" (Toshy leaves the key alone, so this is the only Caps rule).
+# Tap sends F16, an unused key that the keymap below always swallows; real Caps Lock = both Shift keys.
+multipurpose_modmap("User Caps tap F16 / hold Ctrl", {
+    Key.CAPSLOCK:               [Key.F16, Key.LEFT_CTRL]
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_remote
+)
+
+keymap("User Caps double tap", {
+    # isDoubleTap sends Esc the moment the 2nd tap lands (MultiTap waited another 0.25 s
+    # for a possible 3rd tap). Taps must be within 0.24 s; a single tap does nothing.
+    C("F16"): isDoubleTap(C("Esc")),
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_remote
+)
+
+
 keymap("User app launchers", {
     # Cmd+Ctrl+B (physical Alt + Caps, or Alt + Left Ctrl) -> Ctrl+Alt+B,
     # which the GNOME "Run or Raise" extension uses to focus or launch Chrome.

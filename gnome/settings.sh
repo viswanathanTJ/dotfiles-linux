@@ -101,7 +101,7 @@ PY"
     run "python3 - <<'PY'
 import sqlite3, os
 c = sqlite3.connect(os.path.expanduser('~/.config/toshy/toshy_user_preferences.sqlite'))
-for k, v in [('capslock_mode','caps_is_esc_and_lctrl'),('l_cmd_is_sup_and_cmd','False'),('l_opt_is_sup_and_opt','False')]:
+for k, v in [('capslock_mode','caps_is_caps'),('l_cmd_is_sup_and_cmd','False'),('l_opt_is_sup_and_opt','False')]:
     c.execute('update config_preferences set value=? where name=?', (v, k))
 c.commit()
 PY"

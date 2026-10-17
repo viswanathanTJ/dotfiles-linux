@@ -148,7 +148,7 @@ html{scroll-behavior:smooth}
   <h2>Your keys</h2>
   <p>Toshy maps keys by <strong>position</strong>, like a real Mac keyboard (<code>Control · Option · Command · space</code>). On this PC keyboard the bottom-left row is <code>Ctrl · Win · Alt · space</code>:</p>
   <div class="board" role="list">
-    <div class="cap" role="listitem"><span class="phys">Caps Lock</span><span class="role">Ctrl / Esc</span><span class="how">Hold = real Ctrl. Tap = Esc. Both Shifts = real Caps Lock.</span></div>
+    <div class="cap" role="listitem"><span class="phys">Caps Lock</span><span class="role">Ctrl / Esc</span><span class="how">Hold = real Ctrl. Double tap = Esc (one tap does nothing). Both Shifts = real Caps Lock.</span></div>
     <div class="cap" role="listitem"><span class="phys">Left Ctrl</span><span class="role">Control</span><span class="how">Mac Control: real Ctrl in terminals, Mac-style in apps.</span></div>
     <div class="cap" role="listitem"><span class="phys">Win</span><span class="role">Option</span><span class="how">Word jumps. Win+1…9 = dock apps (like Windows). Tapping it does nothing.</span></div>
     <div class="cap" role="listitem"><span class="phys">Left Alt</span><span class="role">Cmd ⌘</span><span class="how">Copy, paste, tabs, quit, app switching.</span></div>
@@ -289,7 +289,7 @@ cd ~/Downloads/Toshy-main; ./setup_toshy.py install</pre></div></li>
     <li><strong>Set Toshy's preferences</strong>: tray icon → Preferences, or <code>toshy-gui</code>. CapsLock Mode <strong>"Caps is Esc &amp; LCtrl always"</strong>; Super Tap Passthru <strong>both off</strong>. Or set them directly:
       <div class="code"><div class="label">fish</div><pre>python3 -c 'import sqlite3,os
 c=sqlite3.connect(os.path.expanduser("~/.config/toshy/toshy_user_preferences.sqlite"))
-for k,v in [("capslock_mode","caps_is_esc_and_lctrl"),("l_cmd_is_sup_and_cmd","False"),("l_opt_is_sup_and_opt","False")]:
+for k,v in [("capslock_mode","caps_is_caps"),("l_cmd_is_sup_and_cmd","False"),("l_opt_is_sup_and_opt","False")]:
     c.execute("update config_preferences set value=? where name=?",(v,k))
 c.commit()'</pre></div></li>
     <li><strong>Add the custom Toshy rules</strong>: paste the <a href="#cfg-toshy">user_apps block</a> into <code>~/.config/toshy/toshy_config.py</code>, replacing the existing <code>user_apps</code> section between its <code>SLICE_MARK</code> lines.</li>
@@ -306,6 +306,26 @@ c.commit()'</pre></div></li>
   <h3 id="cfg-toshy">Toshy custom rules · <code>~/.config/toshy/toshy_config.py</code>, section <code>user_apps</code></h3>
   <p>The other user sections (<code>user_custom_modmaps</code>, <code>user_custom_functions</code>) are empty.</p>
   <div class="code"><div class="label">python</div><pre>###  SLICE_MARK_START: user_apps  ###  EDITS OUTSIDE THESE MARKS WILL BE LOST ON UPGRADE
+
+
+# Caps: hold = real Ctrl, single tap = nothing, quick double tap = Esc.
+# Needs Toshy's CapsLock mode "caps_is_caps" (Toshy leaves the key alone, so this is the only Caps rule).
+# Tap sends F16, an unused key that the keymap below always swallows; real Caps Lock = both Shift keys.
+multipurpose_modmap("User Caps tap F16 / hold Ctrl", {
+    Key.CAPSLOCK:               [Key.F16, Key.LEFT_CTRL]
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_remote
+)
+
+keymap("User Caps double tap", {
+    # isDoubleTap sends Esc the moment the 2nd tap lands (MultiTap waited another 0.25 s
+    # for a possible 3rd tap). Taps must be within 0.24 s; a single tap does nothing.
+    C("F16"): isDoubleTap(C("Esc")),
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_remote
+)
 
 
 keymap("User app launchers", {
@@ -493,7 +513,7 @@ forced_numpad = True
 altgr_on_menu_key = True
 media_arrows_fix = False
 multi_lang = False
-capslock_mode = caps_is_esc_and_lctrl
+capslock_mode = caps_is_caps
 Enter2Ent_Cmd = False
 l_cmd_is_sup_and_cmd = False
 l_opt_is_sup_and_opt = False

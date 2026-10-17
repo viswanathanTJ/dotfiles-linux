@@ -158,6 +158,17 @@ sudo dnf install -y git stow fish tmux kitty ripgrep fd-find eza jq btop copyq \
 
 starship, the font, Neovim, tmux plugins and Toshy use the same commands as above. Install VS Code and Chrome from their `.rpm` downloads, and Teams for Linux from the `.rpm` on its GitHub releases page.
 
+## Caps Lock key
+
+| Caps | Does |
+|---|---|
+| Hold | Real Ctrl (Caps+H/J/K/L arrows, Caps+A/F line start/end, Caps+1…4 desktops, Alt+Caps+letter apps, Ctrl+a for tmux) |
+| **Double tap** (within 0.24 s) | **Esc**, sent on the second tap |
+| Single tap | Nothing |
+| Both Shift keys | Real Caps Lock |
+
+Set by Toshy's CapsLock mode `caps_is_caps` (Toshy leaves the key alone) plus two rules in `keyboard/toshy_user_apps.py`: Caps tap sends the unused key F16, and `isDoubleTap` turns two F16 taps into Esc.
+
 ## Touchpad gestures (Wayland)
 
 Set by `./setup.sh desktops` with the [Touchpad Gesture Customization](https://extensions.gnome.org/extension/7850/touchpad-gesture-customization/) extension (installed into your home folder, no sudo):
