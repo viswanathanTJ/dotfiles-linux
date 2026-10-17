@@ -106,9 +106,9 @@ keymap("User terminal tab switching", {
 
 keymap("User Chrome Caps", {
     # Chrome only, checked before the Caps word-erase and vim-arrow rules below.
-    # Caps+L = address bar (like Alt+L / Ctrl+L), Caps+W = close tab (like Alt+W).
+    # Caps+L = address bar (like Alt+L / Ctrl+L). Caps+W erases a word, as in other apps;
+    # close the tab with Alt+W (Cmd+W).
     C("LC-l"):                  C("C-l"),                       # focus and select the address bar
-    C("LC-w"):                  C("C-w"),                       # close tab
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     hmp_is_chrome_browser(ctx) )
@@ -117,7 +117,8 @@ keymap("User Caps word erase", {
     # Caps held = literal Linux Ctrl (Caps mode esc_and_lctrl), so in apps Caps+W was
     # Ctrl+W = close tab. On a Mac, Ctrl+W never closes; Cmd+W (Alt+W) does.
     # Make Caps+W erase the previous word, like Ctrl+W in a terminal.
-    C("LC-w"):                  C("C-Backspace"),               # erase previous word
+    C("LC-w"):                  C("C-Backspace"),               # erase previous word (Caps+W)
+    C("Super-w"):               C("C-Backspace"),               # same for physical Left Ctrl+W (Mac Control)
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     not ctx_app_is_terminal and not ctx_app_is_remote
