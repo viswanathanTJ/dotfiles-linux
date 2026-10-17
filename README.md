@@ -163,7 +163,7 @@ starship, the font, Neovim, tmux plugins and Toshy use the same commands as abov
 | Caps | Does |
 |---|---|
 | Hold | Real Ctrl (Caps+H/J/K/L arrows, Caps+A/F line start/end, Caps+1…4 desktops, Alt+Caps+letter apps, Ctrl+a for tmux) |
-| **Double tap** (within 0.24 s) | **Esc**, sent on the second tap |
+| **Double tap** (within 0.48 s) | **Esc**, sent on the second tap |
 | Single tap | Nothing |
 | Both Shift keys | Real Caps Lock |
 

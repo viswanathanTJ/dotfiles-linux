@@ -11,9 +11,13 @@ multipurpose_modmap("User Caps tap F16 / hold Ctrl", {
     not ctx_app_is_remote
 )
 
+# Double-tap window for isDoubleTap (Toshy's default 0.24 s, doubled). Set here, inside the
+# user_apps section, so it survives Toshy upgrades.
+tapInterval = 0.48
+
 keymap("User Caps double tap", {
     # isDoubleTap sends Esc the moment the 2nd tap lands (MultiTap waited another 0.25 s
-    # for a possible 3rd tap). Taps must be within 0.24 s; a single tap does nothing.
+    # for a possible 3rd tap). Taps must be within tapInterval (above); a single tap does nothing.
     C("F16"): isDoubleTap(C("Esc")),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
