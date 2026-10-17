@@ -81,5 +81,8 @@
     "typescript.disableAutomaticTypeAcquisition": true,
     // Cap the TypeScript server at 2 GB
     "typescript.tsserver.maxTsServerMemory": 2048,
-    // =>
+    // Remote-SSH: use RemoteCommand from ~/.ssh/config (host "fedora-code" starts bash, since the
+    // login shell there is fish and VS Code's setup script needs bash); allow slow Tailscale approvals
+    "remote.SSH.enableRemoteCommand": true,
+    "remote.SSH.connectTimeout": 60
 }
