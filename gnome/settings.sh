@@ -143,6 +143,8 @@ gnome_lock() {
     say "No password after screen blank or suspend (undo: autolock on). Alt+Caps+Q still locks."
     run "gsettings set org.gnome.desktop.screensaver lock-enabled false"
     run "gsettings set org.gnome.desktop.screensaver ubuntu-lock-on-suspend false 2>/dev/null || true"
+    # notifications don't wake a blanked or locked screen (they're still shown once you're back)
+    run "gsettings set org.gnome.desktop.notifications show-in-lock-screen false"
     echo "    Login without a password is separate and needs sudo: run 'autologin on' in fish if you want it."
 }
 
@@ -219,6 +221,7 @@ reset_lock_settings() {
     say "Screen lock back to defaults (password after blank and suspend)"
     run "gsettings reset org.gnome.desktop.screensaver lock-enabled"
     run "gsettings reset org.gnome.desktop.screensaver ubuntu-lock-on-suspend 2>/dev/null || true"
+    run "gsettings reset org.gnome.desktop.notifications show-in-lock-screen"
 }
 
 reset_teams_settings() {
