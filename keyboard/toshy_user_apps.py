@@ -15,6 +15,16 @@ multipurpose_modmap("User Caps tap F16 / hold Ctrl", {
 # user_apps section, so it survives Toshy upgrades.
 tapInterval = 0.48
 
+keymap("User Ctrl+Space", {
+    # Real Ctrl+Space for apps (VibeTyper dictation hotkey, code completion). Toshy's default turns
+    # it into Super+Space (keyboard layout switch); this laptop has only the US layout.
+    C("LC-Space"):              C("C-Space"),                   # Caps+Space
+    C("Super-Space"):           C("C-Space"),                   # physical Left Ctrl+Space in apps
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    not ctx_app_is_remote
+)
+
 keymap("User Caps double tap", {
     # isDoubleTap sends Esc the moment the 2nd tap lands (MultiTap waited another 0.25 s
     # for a possible 3rd tap). Taps must be within tapInterval (above); a single tap does nothing.
