@@ -665,6 +665,8 @@ GNOME's touchpad gestures only work in a **Wayland** session. On the login scree
 
 Claude Code panes are resumed with their own conversations by the `tmux-assistant-resurrect` plugin. On tmux 3.4 its hooks never ran: it stores the path as `"$HOME"/…` and tmux hands that back as `"\$HOME"`. So `~/.tmux.conf` re-sets both hooks with a `~/…` path after tpm loads. Logs are in `~/.local/share/tmux/resurrect/assistant-save.log` and `assistant-restore.log`.
 
+The plugin resumes with `command claude`, which skips the claude-multiprofile fish wrapper, so every pane came back on the default `~/.claude` profile. `~/.tmux.conf` sets `@assistant-resurrect-capture-env 'CLAUDE_CONFIG_DIR'`: the SessionStart hook records each pane's profile folder and restore puts it in front of the command. Panes started before this change need one restart (or `/resume`) and a save before they come back on the right profile.
+
 ## Screen lock and login: `autolock`, `autologin`
 
 Idle (5 min) and **Alt+Caps+L** only blank the screen while auto-lock is off; **Alt+Caps+Q** always locks with a password.
