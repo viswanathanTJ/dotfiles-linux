@@ -9,7 +9,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 // Desktop numbers count from 1. Matched against the app id, then the window class.
 const RULES = [
     {desktop: 1, ids: ['teams-for-linux.desktop'], classes: ['teams-for-linux']},
-    {desktop: 2, ids: ['google-chrome.desktop'], classes: ['google-chrome']},
+    {desktop: 2, ids: ['brave-browser.desktop', 'com.brave.Browser.desktop'], classes: ['brave-browser']},
     {desktop: 3, ids: ['kitty.desktop'], classes: ['kitty']},
     {desktop: 3, ids: ['com.microsoft.VSCode.desktop', 'code.desktop'], classes: ['code']},
 ];
@@ -52,7 +52,14 @@ export default class DesktopRules extends Extension {
             return;
         const id = actor.connect('first-frame', () => {
             actor.disconnect(id);
-            this._place(win, GLib.get_monotonic_time() > this._quietUntil);
+            // Move it after the signal returns, not inside it (moving a window from within
+            // first-frame is the likely cause of the GNOME 46 crash)
+            const follow = GLib.get_monotonic_time() > this._quietUntil;
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                if (this._tracker && win.get_compositor_private())
+                    this._place(win, follow);
+                return GLib.SOURCE_REMOVE;
+            });
         });
     }
 
@@ -82,8 +89,19 @@ export default class DesktopRules extends Extension {
         const index = desktop - 1;
         if (win.get_workspace()?.index() !== index)
             win.change_workspace_by_index(index, false);
-        // A window you just opened: go to its desktop with it
-        if (follow && wm.get_active_workspace_index() !== index)
+        // An app you just opened: go to its desktop with it. Only for its first window, so an
+        // app that keeps opening windows (Genymotion's player) doesn't pull you to its desktop.
+        if (follow && wm.get_active_workspace_index() !== index && !this._appHasOtherWindows(win))
             wm.get_workspace_by_index(index).activate_with_focus(win, global.get_current_time());
+    }
+
+    _appHasOtherWindows(win) {
+        const pid = win.get_pid();
+        const cls = win.get_wm_class();
+        return global.get_window_actors().some(actor => {
+            const other = actor.meta_window;
+            return other !== win &&
+                ((pid > 0 && other.get_pid() === pid) || (cls && other.get_wm_class() === cls));
+        });
     }
 }

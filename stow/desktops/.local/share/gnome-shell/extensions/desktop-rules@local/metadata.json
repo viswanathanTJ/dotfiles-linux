@@ -1,6 +1,12 @@
 {
   "uuid": "desktop-rules@local",
   "name": "Desktop rules",
-  "description": "Teams on desktop 1, Chrome on 2, kitty and VS Code on 3, every other app on 4.",
-  "shell-version": ["46"]
+  "description": "Teams on desktop 1, Brave on 2, kitty and VS Code on 3, every other app on 4.",
+  "shell-version": [
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
+  ]
 }
