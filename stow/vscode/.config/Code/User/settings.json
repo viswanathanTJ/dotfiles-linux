@@ -5,6 +5,8 @@
     "editor.fontFamily": "'FiraCode Nerd Font Mono','Droid Sans Mono', monospace",
     "terminal.integrated.fontLigatures.enabled": true,
     "editor.fontLigatures": true,
+    // Claude Code opens in the bottom panel
+    "claudeCode.preferredLocation": "panel",
     // Neovim: send no Ctrl keys to Neovim, so every Ctrl shortcut keeps its normal VS Code behaviour
     "vscode-neovim.ctrlKeysForNormalMode": [],
     "vscode-neovim.ctrlKeysForInsertMode": [],
@@ -12,8 +14,29 @@
     "vscode-neovim.compositeKeys": {
         "jj": { "command": "vscode-neovim.escape" }
     },
-    // Neovim: run the extension in its own process so other extensions can't make typing lag
-    "extensions.experimental.affinity": { "asvetliakov.vscode-neovim": 1 },
+    // VSCodeVim (vscodevim.vim, the Vim extension installed on this machine)
+    "vim.easymotion": true,
+    "vim.incsearch": true,
+    "vim.hlsearch": true,
+    "vim.useSystemClipboard": true,
+    // Vim takes no Ctrl keys, so Cmd+F/A/C… (Toshy sends Ctrl+…) keep their normal VS Code behaviour
+    "vim.useCtrlKeys": false,
+    "vim.handleKeys": {
+        "<C-a>": false,
+        "<C-f>": false
+    },
+    "vim.leader": "<space>",
+    // jj in insert mode = Escape
+    "vim.insertModeKeyBindings": [
+        { "before": ["j", "j"], "after": ["<Esc>"] }
+    ],
+    "vim.normalModeKeyBindingsNonRecursive": [
+        { "before": ["<leader>", "d"], "after": ["d", "d"] },
+        { "before": ["<C-n>"], "commands": [":nohl"] },
+        { "before": ["K"], "commands": ["lineBreakInsert"], "silent": true }
+    ],
+    // Run the Vim extension in its own process so other extensions can't make typing lag
+    "extensions.experimental.affinity": { "asvetliakov.vscode-neovim": 1, "vscodevim.vim": 1 },
     // Relative line numbers for 5j / 12dd (VS Code draws the numbers, not Neovim)
     "editor.lineNumbers": "relative",
     "terminal.integrated.fontSize": 12,
