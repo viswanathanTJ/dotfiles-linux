@@ -16,8 +16,10 @@ const RULES = [
 const OTHERS_DESKTOP = 4;
 
 // Never moved: tray/helper windows and the Force Quit (btop) kitty window.
-const SKIP_CLASSES = ['copyq', 'gnome-shell', 'org.gnome.shell.extensions'];
-const SKIP_TITLES = ['Force Quit (btop)'];
+// wl-copy / wl-paste open a hidden window "wl-clipboard" for every copy (GNOME has no
+// clipboard protocol without one); moving it pulled you to desktop 4 on each copy.
+const SKIP_CLASSES = ['copyq', 'gnome-shell', 'org.gnome.shell.extensions', 'io.github.bugaevc.wl-clipboard'];
+const SKIP_TITLES = ['Force Quit (btop)', 'wl-clipboard'];
 
 export default class DesktopRules extends Extension {
     enable() {
