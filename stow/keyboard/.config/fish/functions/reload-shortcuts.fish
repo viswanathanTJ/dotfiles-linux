@@ -2,12 +2,14 @@ function reload-shortcuts --description 'Reload Run or Raise and Toshy after edi
     # Check the Toshy config first: a typo would stop Toshy and leave the keyboard unmapped
     set -l cfg ~/.config/toshy/toshy_config.py
 
-    # Keep the Toshy rules in ~/dotfiles/keyboard/toshy_user_apps.py and Toshy's own config in sync:
-    # whichever was edited last wins (Toshy's config can't be a symlink; Toshy rewrites it on upgrade)
-    set -l repo ~/dotfiles/keyboard/toshy_user_apps.py
+    # Keep the Toshy rules in the repo's keyboard/toshy_user_apps.py and Toshy's own config in sync:
+    # whichever was edited last wins (Toshy's config can't be a symlink; Toshy rewrites it on upgrade).
+    # The repo is found through this file's stow link: <repo>/stow/keyboard/.config/fish/functions/
+    set -l dotfiles (path resolve (path dirname (path resolve (functions --details reload-shortcuts)))/../../../../..)
+    set -l repo $dotfiles/keyboard/toshy_user_apps.py
     if test -f $repo
         cp -a $cfg $cfg.bak-reload
-        python3 -I ~/dotfiles/keyboard/sync-toshy-rules.py $cfg $repo
+        python3 -I $dotfiles/keyboard/sync-toshy-rules.py $cfg $repo
         or return 1
     end
 
