@@ -20,7 +20,7 @@ describe() {
         nvim)     echo "Neovim config (plugins download on first start)" ;;
         kitty)    echo "kitty terminal (splits, fonts, shortcuts)" ;;
         vscode)   echo "VS Code settings.json + keybindings.json" ;;
-        copyq)    echo "CopyQ: start at login through XWayland so it sees the clipboard on Wayland" ;;
+        copyq)    echo "CopyQ: start at login through XWayland so it sees the clipboard on Wayland; Enter pastes (through ydotool)" ;;
         tools)    echo "Screen OCR and blank-screen scripts; btop sorted by memory" ;;
         podman)   echo "docker -> podman fish wrapper" ;;
         keyboard) echo "Mac-style keys: Toshy rules + preferences, GNOME shortcuts, Run or Raise (checks its prerequisites first: extensions running, Toshy installed)" ;;
@@ -180,8 +180,8 @@ want() { [ -n "${WANT[$1]:-}" ]; }
 # ---------------------------------------------------------------- apply helpers
 do_packages() {
     local pm missing=() p
-    local apt_pkgs=(stow fish tmux kitty git curl unzip jq ripgrep fd-find eza gh btop copyq tesseract-ocr tesseract-ocr-eng wl-clipboard libnotify-bin python3-gi)
-    local dnf_pkgs=(stow fish tmux kitty git curl unzip jq ripgrep fd-find eza gh btop copyq tesseract tesseract-langpack-eng wl-clipboard libnotify python3-gobject gnome-shell-extension-appindicator)
+    local apt_pkgs=(stow fish tmux kitty git curl unzip jq ripgrep fd-find eza gh btop copyq tesseract-ocr tesseract-ocr-eng wl-clipboard ydotool libnotify-bin python3-gi)
+    local dnf_pkgs=(stow fish tmux kitty git curl unzip jq ripgrep fd-find eza gh btop copyq tesseract tesseract-langpack-eng wl-clipboard ydotool libnotify python3-gobject gnome-shell-extension-appindicator)
     pm=$(pkg_mgr)
     case "$pm" in
         apt) for p in "${apt_pkgs[@]}"; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "ok installed" || missing+=("$p"); done ;;
@@ -316,15 +316,49 @@ apply_extras() {   # $1 = part: the non-file steps
                 if [ -e "$auto" ]; then backup_path ".config/autostart/copyq.desktop"; fi
                 run "mkdir -p \"$HOME/.config/autostart\" && printf '[Desktop Entry]\\nType=Application\\nName=CopyQ\\nIcon=copyq\\nExec=env QT_QPA_PLATFORM=xcb copyq\\nX-GNOME-Autostart-Delay=3\\nX-GNOME-Autostart-enabled=true\\n' > \"$auto\""
             fi
-            # Enter only copies the item and closes CopyQ (paste with Cmd+V). CopyQ's own paste fakes
-            # Ctrl+V through XWayland, which GNOME answers with a "Remote Desktop" permission prompt
-            # that eats the key. And CopyQ only sees XWayland windows, so "focus the previous window"
-            # focused the wrong one; with it off, GNOME gives focus back to the window you were in.
-            local cq="$HOME/.config/copyq/copyq.conf"
-            if ! grep -qs '^activate_pastes=false' "$cq" || ! grep -qs '^activate_focuses=false' "$cq"; then
-                say "CopyQ: Enter copies the item and returns to your window (paste with Cmd+V)"
+            # Enter pastes. CopyQ's own paste fakes Ctrl+V through XWayland, which GNOME answers with a
+            # "Remote Desktop" permission prompt that eats the key; so CopyQ presses the paste keys through
+            # ydotool's virtual keyboard instead (copyq/paste-ydotool.js; Ctrl+Shift+V in terminals).
+            # CopyQ only sees XWayland windows, so "focus the previous window" stays off: GNOME gives
+            # focus back to the window you were in. Without ydotool, Enter only copies (paste with Cmd+V).
+            local cq="$HOME/.config/copyq/copyq.conf" unit="$HOME/.config/systemd/user/ydotoold.service"
+            if ! have ydotool || ! have ydotoold; then
+                say "CopyQ: Enter copies the item (paste with Cmd+V); install ydotool to make Enter paste:"
+                echo "    sudo dnf install -y ydotool   (or: sudo apt install ydotool), then ./setup.sh copyq"
                 run "env QT_QPA_PLATFORM=xcb copyq --start-server config activate_pastes false >/dev/null"
                 run "env QT_QPA_PLATFORM=xcb copyq config activate_focuses false >/dev/null"
+            else
+                if ! id -nG | tr ' ' '\n' | grep -qx input; then
+                    echo "    ydotool needs /dev/uinput: add yourself to the input group, then log out and back in:"
+                    echo "      sudo usermod -aG input $USER"
+                fi
+                if ! cmp -s "$HERE/copyq/ydotoold.service" "$unit"; then
+                    say "ydotoold: user service for CopyQ's paste (virtual keyboard, no root)"
+                    run "mkdir -p \"$HOME/.config/systemd/user\" && cp \"$HERE/copyq/ydotoold.service\" \"$unit\""
+                    run "systemctl --user daemon-reload"
+                fi
+                if ! systemctl --user is-enabled ydotoold.service >/dev/null 2>&1 || ! systemctl --user is-active ydotoold.service >/dev/null 2>&1; then
+                    run "systemctl --user enable --now ydotoold.service"
+                fi
+                say "CopyQ: Enter pastes through ydotool and returns to your window"
+                run "env QT_QPA_PLATFORM=xcb copyq --start-server eval 'var code = str(execute(\"cat\", arguments[1]).stdout); var c = commands().filter(function(x){ return x.name !== \"Paste via ydotool (Wayland)\" }); c.push({name: \"Paste via ydotool (Wayland)\", isScript: true, cmd: code}); setCommands(c)' \"$HERE/copyq/paste-ydotool.js\" >/dev/null"
+                run "env QT_QPA_PLATFORM=xcb copyq config activate_pastes true >/dev/null"
+                run "env QT_QPA_PLATFORM=xcb copyq config activate_focuses false >/dev/null"
+                # Toshy must leave ydotool's keyboard alone, or it remaps the paste keys. This line sits outside
+                # Toshy's user_apps section (devices_api), so a Toshy upgrade drops it; this step puts it back.
+                local tcfg="$HOME/.config/toshy/toshy_config.py"
+                if [ -f "$tcfg" ] && ! grep -q "'ydotoold virtual device'" "$tcfg"; then
+                    say "Toshy: ignore ydotool's virtual keyboard"
+                    run "cp -a \"$tcfg\" \"$tcfg.bak-ydotool\" && python3 - \"$tcfg\" <<'PY'
+import sys
+p = sys.argv[1]; t = open(p).read()
+old = \"    ignore_devices = [\n\"
+if old not in t: sys.exit('ignore_devices list not found in ' + p)
+t = t.replace(old, old + \"        'ydotoold virtual device',      # CopyQ pastes through ydotool: send its keys unremapped\n\", 1)
+open(p, 'w').write(t)
+PY"
+                    run "rm -f \"$HOME/.config/toshy/__pycache__/\"toshy_config.*.pyc; systemctl --user restart toshy-config.service || true"
+                fi
             fi ;;
         podman)
             if [ ! -e "$HOME/.config/containers/registries.conf" ]; then

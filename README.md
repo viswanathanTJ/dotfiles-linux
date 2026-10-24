@@ -223,7 +223,7 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `nvim` | `~/.config/nvim/` | Plugins download on first start |
 | `kitty` | `kitty.conf` | — |
 | `vscode` | `settings.json`, `keybindings.json` | — |
-| `copyq` | — (its config files are all defaults) | Autostart entry that runs CopyQ through XWayland, so it sees the clipboard on Wayland |
+| `copyq` | `copyq/ydotoold.service`, `copyq/paste-ydotool.js` (copied, not linked) | Autostart entry that runs CopyQ through XWayland, so it sees the clipboard on Wayland. Enter pastes: CopyQ presses Ctrl+V (Ctrl+Shift+V in terminals) through ydotool's virtual keyboard, because GNOME answers CopyQ's own fake keys with a Remote Desktop prompt. Needs the `ydotool` package and the `input` group; installs the `ydotoold` user service and tells Toshy to ignore its keyboard |
 | `tools` | `screen-ocr`, `blank-screen` | btop: `proc_sorting = "memory"` (the one btop setting changed) |
 | `podman` | fish `docker` → podman wrapper | Docker Hub short names |
 | `keyboard` | Run or Raise `shortcuts.conf`, fish `reload-shortcuts` | GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
