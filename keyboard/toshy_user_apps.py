@@ -105,6 +105,10 @@ keymap("User terminal tab switching", {
     # + Tab left Ctrl stuck in kitty, and later keys arrived as Ctrl+key.
     C("LC-Tab"):                [bind,C("C-Tab")],              # next tab (kitty: ctrl+tab)
     C("Shift-LC-Tab"):          [bind,C("Shift-C-Tab")],        # previous tab (kitty: ctrl+shift+tab)
+    # Caps+[ / Caps+] = previous/next tmux window, same as Win+H / Win+L (Alt+h / Alt+l, see ~/.tmux.conf).
+    # Without this, Caps+[ is Ctrl+[ = Esc, which tmux can't tell apart from Esc.
+    C("LC-Left_Brace"):         C("Alt-h"),                     # previous tmux window
+    C("LC-Right_Brace"):        C("Alt-l"),                     # next tmux window
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     ctx_app_is_terminal
