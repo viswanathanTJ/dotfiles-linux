@@ -121,3 +121,4 @@ fi
 # git status (fish has its own in ~/.config/fish/conf.d/10-aliases.fish); without it, gs runs Ghostscript
 alias gs='git status'
 alias glo='git log --oneline --decorate'
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"   # Rust (rustup), when installed
