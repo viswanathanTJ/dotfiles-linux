@@ -1,6 +1,6 @@
 # GNOME settings that live in GNOME's settings database (dconf), not in files,
 # so they can't be symlinked. setup.sh sources this file and calls these functions.
-# To change a setting: edit it here, then run ./setup.sh --only <part> again.
+# To change a setting: edit it here, then run ./setup.sh <part> again.
 # Needs: run, say, have (from setup.sh), HERE = repo folder.
 
 gnome_ver() { gnome-shell --version 2>/dev/null | grep -oE '[0-9]+' | head -1; }
@@ -31,13 +31,62 @@ PY"
 }
 
 # ---------------------------------------------------------------- keyboard
-gnome_keyboard() {
-    say "GNOME extensions: Focused Window D-Bus + Run or Raise"
-    run "gsettings set org.gnome.shell disable-user-extensions false"
-    gnome-extensions info focused-window-dbus@flexagoon.com >/dev/null 2>&1 || install_extension 5592 focused-window-dbus@flexagoon.com
-    gnome-extensions info run-or-raise@edvard.cz >/dev/null 2>&1 || install_extension 1336 run-or-raise@edvard.cz
-    set_extensions +focused-window-dbus@flexagoon.com +run-or-raise@edvard.cz
+KEY_EXTENSIONS=(focused-window-dbus@flexagoon.com run-or-raise@edvard.cz appindicatorsupport@rgcjonas.gmail.com)
+TOSHY_CFG="$HOME/.config/toshy/toshy_config.py"
 
+# installed on disk (gnome-extensions info only knows the ones loaded since the last log-in)
+ext_installed() {
+    [ -d "$HOME/.local/share/gnome-shell/extensions/$1" ] || [ -d "/usr/share/gnome-shell/extensions/$1" ]
+}
+
+# extensions the keys need: Focused Window D-Bus (Toshy sees the focused app on Wayland),
+# Run or Raise (app launchers), AppIndicator (Toshy's top-bar icon)
+gnome_key_extensions() {
+    say "GNOME extensions: Focused Window D-Bus + Run or Raise + AppIndicator"
+    run "gsettings set org.gnome.shell disable-user-extensions false"
+    ext_installed focused-window-dbus@flexagoon.com || install_extension 5592 focused-window-dbus@flexagoon.com
+    ext_installed run-or-raise@edvard.cz || install_extension 1336 run-or-raise@edvard.cz
+    # AppIndicator comes from the gnome-shell-extension-appindicator package (./setup.sh packages)
+    set_extensions $(printf '+%s ' "${KEY_EXTENSIONS[@]}")
+}
+
+# Prerequisites, in order; each one needs the one before it. Returns 1 (and says what to do)
+# while one is missing, so the GNOME keys are never changed without Toshy to go with them.
+keyboard_ready() {
+    local e off=() ans
+    if have gnome-extensions; then
+        for e in "${KEY_EXTENSIONS[@]}"; do
+            gnome-extensions info "$e" 2>/dev/null | grep -q 'State: ACTIVE' || off+=("$e")
+        done
+        if [ ${#off[@]} -gt 0 ]; then
+            say "Keyboard prerequisite 1/2: GNOME extensions not running yet: ${off[*]}"
+            echo "    Newly installed extensions only load after a log-out on Wayland (and Toshy's installer"
+            echo "    refuses to work without Focused Window D-Bus). Log out and back in, then: ./setup.sh keyboard"
+            echo "    Still missing after that? appindicator: ./setup.sh packages; others: extensions.gnome.org"
+            return 1
+        fi
+    fi
+    if [ ! -f "$TOSHY_CFG" ]; then
+        say "Keyboard prerequisite 2/2: Toshy (Mac-style keys) is not installed"
+        echo "    Install it as your normal user, not with sudo (it asks for the password itself):"
+        echo "      curl -fL -o /tmp/toshy.zip https://github.com/RedBearAK/toshy/archive/refs/heads/main.zip"
+        echo "      unzip -o /tmp/toshy.zip -d ~/Downloads/"
+        echo "      cd ~/Downloads/Toshy-main; ./setup_toshy.py install"
+        echo "    Then log out and back in, and run ./setup.sh keyboard again."
+        if [ "$DRY" = 0 ] && [ -t 0 ]; then
+            printf '    Install Toshy now? [y/N] '; read -r ans || ans=n
+            case "$ans" in y|Y|yes|Yes)
+                curl -fL -o /tmp/toshy.zip https://github.com/RedBearAK/toshy/archive/refs/heads/main.zip &&
+                    unzip -oq /tmp/toshy.zip -d "$HOME/Downloads/" &&
+                    (cd "$HOME/Downloads/Toshy-main" && ./setup_toshy.py install) || true
+                echo "    Log out and back in, then run ./setup.sh keyboard again." ;;
+            esac
+        fi
+        return 1
+    fi
+}
+
+gnome_keyboard() {
     say "GNOME keyboard settings"
     # Caps = Ctrl when Toshy is off; both Shift keys = Caps Lock
     run "gsettings set org.gnome.desktop.input-sources xkb-options \"['ctrl:nocaps', 'shift:both_capslock']\""
@@ -51,7 +100,7 @@ gnome_keyboard() {
     run "gsettings set org.gnome.desktop.wm.keybindings switch-windows-backward \"[]\""
     run "gsettings set org.gnome.desktop.wm.keybindings close \"['<Alt>F4', '<Alt>q']\""
     # Ubuntu's Ctrl+Alt+T terminal shortcut off (Run or Raise uses it for kitty)
-    run "gsettings set org.gnome.settings-daemon.plugins.media-keys terminal \"[]\""
+    run "gsettings set org.gnome.settings-daemon.plugins.media-keys terminal \"[]\" 2>/dev/null || true"
     local base=org.gnome.settings-daemon.plugins.media-keys
     local kb=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
     run "gsettings set $base custom-keybindings \"['$kb/copyq/', '$kb/screen-ocr/', '$kb/blank-screen/', '$kb/force-quit/']\""
@@ -82,12 +131,7 @@ gnome_keyboard() {
 
 # Toshy rules: copy keyboard/toshy_user_apps.py into Toshy's config (its user_apps section)
 toshy_rules() {
-    local cfg="$HOME/.config/toshy/toshy_config.py"
-    if [ ! -f "$cfg" ]; then
-        echo "    Toshy is not installed yet. Install it (README.md, 'Keyboard'), log out and in,"
-        echo "    then run ./setup.sh --only keyboard again to add the custom rules."
-        return
-    fi
+    local cfg=$TOSHY_CFG
     say "Toshy: your rules (keyboard/toshy_user_apps.py) and preferences"
     run "cp -a \"$cfg\" \"$cfg.bak-$(date +%Y%m%d-%H%M%S)\""
     run "python3 - \"$cfg\" \"$HERE/keyboard/toshy_user_apps.py\" <<'PY'
@@ -97,6 +141,18 @@ t = open(cfg).read()
 pat = r'###  SLICE_MARK_START: user_apps .*?###  SLICE_MARK_END: user_apps [^\n]*'
 if not re.search(pat, t, re.S): sys.exit('user_apps section not found in ' + cfg)
 open(cfg, 'w').write(re.sub(pat, lambda m: new, t, count=1, flags=re.S))
+PY"
+    # Devices Toshy must not grab (its ignore_devices list is outside user_apps, so add them here):
+    # ydotool (CopyQ pastes through it) and RustDesk's virtual keyboard (busy; grab retries stalled Toshy)
+    run "python3 - \"$cfg\" <<'PY'
+import sys
+cfg = sys.argv[1]
+t = open(cfg).read()
+for name, why in [('ydotoold virtual device', 'CopyQ pastes through ydotool: send its keys unremapped'),
+                  ('RustDesk UInput Keyboard', 'RustDesk remote input: busy, and remote keys should not be remapped')]:
+    if repr(name) not in t:
+        t = t.replace('    ignore_devices = [\n', '    ignore_devices = [\n        %r,  # %s\n' % (name, why), 1)
+open(cfg, 'w').write(t)
 PY"
     run "python3 - <<'PY'
 import sqlite3, os
@@ -117,9 +173,9 @@ gnome_desktops() {
         run "gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-$i \"['<Super><Alt>$i']\""
     done
     run "gsettings set org.gnome.shell disable-user-extensions false"
-    # desktop-rules@local (app -> desktop rules) stays OFF: with it on, GNOME 46 crashed and logged out.
-    # Turn it on by hand to try it: gnome-extensions enable desktop-rules@local
-    set_extensions -desktop-rules@local -auto-move-windows@gnome-shell-extensions.gcampax.github.com
+    # desktop-rules@local: app -> desktop rules (it moves windows from an idle callback now; on
+    # GNOME 46 it crashed the session). If it ever logs you out: gnome-extensions disable desktop-rules@local
+    set_extensions +desktop-rules@local -auto-move-windows@gnome-shell-extensions.gcampax.github.com
 
     say "Touchpad (Wayland): 3-finger left/right = window switcher, 4-finger left/right = desktops"
     local tgc=touchpad-gesture-customization@coooolapps.com
@@ -172,7 +228,7 @@ reset_keyboard_settings() {
              "org.gnome.desktop.wm.keybindings switch-windows" "org.gnome.desktop.wm.keybindings switch-windows-backward" \
              "org.gnome.desktop.wm.keybindings close" "org.gnome.settings-daemon.plugins.media-keys terminal" \
              "org.gnome.settings-daemon.plugins.media-keys custom-keybindings"; do
-        run "gsettings reset $k"
+        run "gsettings reset $k 2>/dev/null || true"
     done
     if gsettings list-schemas | grep -qx org.gnome.shell.extensions.dash-to-dock; then
         for k in dock-fixed autohide intellihide; do run "gsettings reset org.gnome.shell.extensions.dash-to-dock $k"; done

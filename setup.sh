@@ -23,7 +23,7 @@ describe() {
         copyq)    echo "CopyQ: start at login through XWayland so it sees the clipboard on Wayland" ;;
         tools)    echo "Screen OCR and blank-screen scripts; btop sorted by memory" ;;
         podman)   echo "docker -> podman fish wrapper" ;;
-        keyboard) echo "Mac-style keys: Toshy rules + preferences, GNOME shortcuts, Run or Raise (install Toshy first)" ;;
+        keyboard) echo "Mac-style keys: Toshy rules + preferences, GNOME shortcuts, Run or Raise (checks its prerequisites first: extensions running, Toshy installed)" ;;
         desktops) echo "4 fixed desktops, Alt+Caps+1..4, touchpad: 3-finger app switcher, 4-finger desktops (Wayland)" ;;
         lock)     echo "No password after screen blank or suspend; autolock / autologin commands" ;;
         teams)    echo "Teams for Linux: menu bar hidden (fixes Win+Backspace word delete)" ;;
@@ -223,11 +223,20 @@ do_packages() {
 }
 
 link_part() {   # $1 = part; real files in the way are backed up, then Stow links the repo files
-    local p=$1 f moved=0 linked=0
+    local p=$1 f d gone="" moved=0 linked=0
     [ -d "$STOW/$p" ] || return 0
     have stow || { echo "    GNU Stow is not installed: sudo apt install stow (or ./setup.sh packages)"; exit 1; }
     while IFS= read -r f; do
         if is_our_link "$f" "$p"; then linked=$((linked + 1)); continue; fi
+        if [ -n "$gone" ] && [[ "$f" == "$gone"/* ]]; then continue; fi
+        # a parent folder that is a link elsewhere (e.g. ~/.config/nvim -> an old dotfiles copy):
+        # back up the link itself, not the files inside the folder it points to
+        d=$(dirname "$f")
+        while [ "$d" != . ]; do
+            if [ -L "$HOME/$d" ]; then backup_path "$d"; moved=$((moved + 1)); gone=$d; break; fi
+            d=$(dirname "$d")
+        done
+        if [ -n "$gone" ] && [[ "$f" == "$gone"/* ]]; then continue; fi
         if [ -e "$HOME/$f" ] || [ -L "$HOME/$f" ]; then
             if [ -d "$HOME/$f" ] && [ ! -L "$HOME/$f" ]; then
                 echo "    ~/$f is a folder but the repo has a file there; fix it by hand. Skipping $p."; return 0
@@ -299,21 +308,37 @@ apply_extras() {   # $1 = part: the non-file steps
                 run "mkdir -p \"$HOME/.config/btop\" && printf 'proc_sorting = \"memory\"\\n' > \"$btop\""
             fi ;;
         copyq)
-            # the only CopyQ setting changed from its defaults: start at login through XWayland,
+            # CopyQ settings changed from its defaults: start at login through XWayland,
             # so it can see clipboard changes on Wayland (also enables autostart)
             local auto="$HOME/.config/autostart/copyq.desktop"
             if ! grep -qs 'QT_QPA_PLATFORM=xcb' "$auto"; then
                 say "CopyQ: start at login through XWayland (sees the clipboard on Wayland)"
                 if [ -e "$auto" ]; then backup_path ".config/autostart/copyq.desktop"; fi
                 run "mkdir -p \"$HOME/.config/autostart\" && printf '[Desktop Entry]\\nType=Application\\nName=CopyQ\\nIcon=copyq\\nExec=env QT_QPA_PLATFORM=xcb copyq\\nX-GNOME-Autostart-Delay=3\\nX-GNOME-Autostart-enabled=true\\n' > \"$auto\""
+            fi
+            # Enter only copies the item and closes CopyQ (paste with Cmd+V). CopyQ's own paste fakes
+            # Ctrl+V through XWayland, which GNOME answers with a "Remote Desktop" permission prompt
+            # that eats the key. And CopyQ only sees XWayland windows, so "focus the previous window"
+            # focused the wrong one; with it off, GNOME gives focus back to the window you were in.
+            local cq="$HOME/.config/copyq/copyq.conf"
+            if ! grep -qs '^activate_pastes=false' "$cq" || ! grep -qs '^activate_focuses=false' "$cq"; then
+                say "CopyQ: Enter copies the item and returns to your window (paste with Cmd+V)"
+                run "env QT_QPA_PLATFORM=xcb copyq --start-server config activate_pastes false >/dev/null"
+                run "env QT_QPA_PLATFORM=xcb copyq config activate_focuses false >/dev/null"
             fi ;;
         podman)
             if [ ! -e "$HOME/.config/containers/registries.conf" ]; then
                 run "mkdir -p \"$HOME/.config/containers\" && printf 'unqualified-search-registries = [\"docker.io\"]\n' > \"$HOME/.config/containers/registries.conf\""
             fi ;;
         keyboard)
-            if have gsettings; then gnome_keyboard; else echo "    GNOME not found; skipping GNOME keyboard settings"; fi
-            toshy_rules ;;
+            # prerequisites first (extensions running, then Toshy), see keyboard_ready in gnome/settings.sh
+            if have gsettings; then gnome_key_extensions; fi
+            if keyboard_ready; then
+                if have gsettings; then gnome_keyboard; else echo "    GNOME not found; skipping GNOME keyboard settings"; fi
+                toshy_rules
+            else
+                echo "    GNOME keyboard settings and Toshy rules left unchanged until then."
+            fi ;;
         desktops) if have gsettings; then gnome_desktops; fi ;;
         lock)     if have gsettings; then gnome_lock; fi ;;
         teams)    teams_settings ;;

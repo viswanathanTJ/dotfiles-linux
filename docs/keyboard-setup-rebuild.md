@@ -365,7 +365,7 @@ keymap("User hardware keys", {
 
 # Ctrl+Alt+Super+B (Alt+Caps+B): Chrome. Exact wm_class, so Chrome web apps (Outlook, Teams) aren't matched.
 <Control><Alt><Super>b,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
-<Control><Alt><Super>x,gtk-launch google-chrome,/^[Gg]oogle-chrome$/,
+<Control><Alt><Super>x,gtk-launch brave-browser,/^[Bb]rave-browser$/,
 
 # Ctrl+Alt+Super+C (Alt+Caps+C): VS Code
 <Control><Alt><Super>c,gtk-launch com.microsoft.VSCode,/^(code|Code|com\.microsoft\.VSCode)$/,
@@ -375,7 +375,7 @@ keymap("User hardware keys", {
 # Ctrl+Alt+Super+W (Alt+Caps+W): ZapZap (WhatsApp)
 <Control><Alt><Super>w,gtk-launch com.rtosta.zapzap,/^(zapzap|ZapZap|com\.rtosta\.zapzap)$/,
 # Ctrl+Alt+Super+M (Alt+Caps+M): Teams for Linux
-<Control><Alt><Super>m,gtk-launch teams-for-linux,/^teams-for-linux$/,
+<Control><Alt><Super>m,gtk-launch brave-cinhimbnkkaeohfgghhklpknlkffjgod-viswa2k,/cinhimbnkkaeohfgghhklpknlkffjgod/,
 ```
 
 ### 7. GNOME settings

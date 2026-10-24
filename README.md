@@ -182,7 +182,7 @@ Set by `./setup.sh desktops` with the [Touchpad Gesture Customization](https://e
 
 Gestures need a **Wayland** session: on the login screen, choose **Ubuntu** with the gear icon, not "Ubuntu on Xorg". Check: `echo $XDG_SESSION_TYPE` prints `wayland`.
 
-The app-to-desktop extension (`desktop-rules@local`: Teams 1, Chrome 2, kitty + VS Code 3, others 4) is in the repo but **left off**: with it on, GNOME 46 crashed and logged out. Try it by hand with `gnome-extensions enable desktop-rules@local`.
+The app-to-desktop extension (`desktop-rules@local`: Teams 1, Brave 2, kitty + VS Code 3, others 4) is turned on by `./setup.sh desktops` (log out and in to load it). It crashed GNOME 46 once; it now moves windows from an idle callback. If it ever logs you out: `gnome-extensions disable desktop-rules@local`.
 
 ## If something breaks
 
@@ -227,7 +227,7 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `tools` | `screen-ocr`, `blank-screen` | btop: `proc_sorting = "memory"` (the one btop setting changed) |
 | `podman` | fish `docker` → podman wrapper | Docker Hub short names |
 | `keyboard` | Run or Raise `shortcuts.conf`, fish `reload-shortcuts` | GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
-| `desktops` | `desktop-rules@local` extension (installed, **left off**) | 4 fixed desktops, Super+Alt+1…4 (Left Ctrl+1…4, Caps+1…4 and Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |
+| `desktops` | `desktop-rules@local` extension (Teams 1, Brave 2, kitty + VS Code 3, others 4) | 4 fixed desktops, Super+Alt+1…4 (Left Ctrl+1…4, Caps+1…4 and Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |
 | `lock` | fish `autolock`, `autologin` | No password after screen blank or suspend |
 | `teams` | — | Teams for Linux `"menubar": "hidden"` |
 
@@ -265,15 +265,20 @@ Some apps save by writing a new file and swapping it in, which can replace a lin
 
 ## Keyboard (Toshy) on a new machine
 
-1. `./setup.sh keyboard desktops` (extensions and GNOME settings).
-2. Install **Toshy** as your normal user, not with sudo:
+`./setup.sh keyboard` checks the prerequisites in order and stops at the first one missing,
+so the GNOME keys are never changed without Toshy to go with them. Run it until it gets through:
+
+1. `./setup.sh keyboard`: installs and turns on the GNOME extensions (Focused Window D-Bus,
+   Run or Raise, AppIndicator for Toshy's tray icon), then asks you to **log out and back in**:
+   on Wayland new extensions only load at log-in, and Toshy's installer needs Focused Window D-Bus running.
+2. `./setup.sh keyboard` again: offers to install **Toshy** (or run it yourself, as your normal user, not with sudo):
    ```fish
    curl -fL -o /tmp/toshy.zip https://github.com/RedBearAK/toshy/archive/refs/heads/main.zip
    unzip -o /tmp/toshy.zip -d ~/Downloads/
    cd ~/Downloads/Toshy-main; ./setup_toshy.py install
    ```
-3. Log out and back in.
-4. `./setup.sh keyboard` again: now that Toshy exists, it adds your rules and preferences.
+   Then log out and back in.
+3. `./setup.sh keyboard` once more: sets the GNOME keys and adds your Toshy rules and preferences.
 
 Full key list: `docs/keyboard-setup-rebuild.md` or `docs/keyboard-wiki.html`.
 
