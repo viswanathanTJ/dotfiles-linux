@@ -1,0 +1,341 @@
+#!/usr/bin/env bash
+# jbl: connect, pair and check the JBL Flip 6 speaker. Run `jbl --help` for the commands.
+#
+# Why this exists:
+# - The Flip 6 plays from one source at a time. When the phone takes it over, the PC's audio
+#   stream dies but Bluetooth still shows "connected": a reconnect fixes that.
+# - This PC dual-boots Windows with the same Bluetooth adapter, and the speaker keeps one key per
+#   adapter. Pairing in Windows (or resetting the speaker) replaces Fedora's key, so the speaker
+#   then refuses Fedora ("Host is down" / page timeout): pairing again as new fixes that.
+set -u
+
+MAC=E8:26:CF:83:55:2E
+SINK_RE='bluez_output\.E8_26_CF_83_55_2E[^[:space:]]*'
+TIMEOUT=60
+
+usage() {
+    cat <<EOF
+Usage: jbl [COMMAND]     (each also works as a word or bare letter: jbl auto, jbl a, jbl s, ...)
+
+Connect, pair and check the JBL Flip 6 ($MAC).
+
+  (no command)         check everything (like a doctor), then fix what's wrong (= --auto)
+  -a, --auto           check, then fix: use the JBL if it's already working,
+                       reconnect, or pair again as new; says clearly if the speaker is off,
+                       out of range, held by the phone, or needs pairing mode / a reset
+  -c, --connect        reconnect with the existing pairing, then use the JBL for audio
+  -f, --find           scan: is the speaker visible (on and in pairing mode)?
+  -p, --pair           forget the old pairing and pair as new, now (speaker in pairing mode)
+  -P, --find-pair      wait for the speaker to show up (up to the timeout), then pair as new;
+      --setup          same; if it never shows up, explains how to reset the speaker
+  -d, --disconnect     disconnect the speaker
+  -F, --forget         remove the pairing from this PC (pair again with: jbl -P)
+  -o, --output         make the JBL the default audio output (it must be connected)
+  -s, --status         show pairing, connection and audio output
+  -t, --timeout SEC    how long find / find-pair / auto wait for the speaker (default $TIMEOUT)
+  -h, --help           show this help
+
+Pairing mode: press the speaker's Bluetooth button (pairing sound, fast blinking light).
+Reset (only if pairing mode doesn't work): hold Play + Volume Up ~10 s until it turns off,
+then turn it on; it starts in pairing mode. Turn off the phone's Bluetooth first.
+
+When to use what:
+  anything                          jbl            (auto)
+  no sound, but "connected"         jbl -c
+  used the speaker in Windows       jbl -P         (then press the speaker's Bluetooth button)
+  after resetting the speaker       jbl -P
+EOF
+}
+
+say() { printf '%s\n' "$*"; }
+warn() { printf '! %s\n' "$*"; }
+
+info() { bluetoothctl info "$MAC" 2>/dev/null; }
+is_known() { info | grep -q 'Device '; }
+is_connected() { info | grep -q 'Connected: yes'; }
+sink() { pactl list short sinks 2>/dev/null | grep -o -E "$SINK_RE" | head -1; }
+
+reset_help() {
+    say "  1. Turn off your phone's Bluetooth (the speaker may be holding on to it)."
+    say "  2. Press the speaker's Bluetooth button: pairing sound, fast blinking light."
+    say "  3. Still nothing? Reset it: hold Play + Volume Up ~10 s until it turns off,"
+    say "     turn it on again (it starts in pairing mode), then run: jbl -P"
+}
+
+# Bluetooth itself must be on before anything else can work
+adapter_ready() {
+    if rfkill list bluetooth 2>/dev/null | grep -q 'blocked: yes'; then
+        warn "Bluetooth is blocked on this PC (airplane mode or a switch). Turn it on in Settings."
+        return 1
+    fi
+    if ! bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; then
+        say "Bluetooth is off on this PC; turning it on..."
+        bluetoothctl power on >/dev/null 2>&1
+        sleep 2
+        if ! bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; then
+            warn "Couldn't turn Bluetooth on. Turn it on in Settings, then run jbl again."
+            return 1
+        fi
+    fi
+}
+
+# A scan lists the speaker ([NEW] device, or an RSSI update for a known one) only while it is
+# discoverable. Other "[CHG] Device <mac>" lines (Connected: no) don't mean it's there.
+# bluetoothctl colours its output, so strip the codes before matching. Stops on the first hit.
+wait_visible() {
+    local secs=$1 log pid i found=1
+    log=$(mktemp)
+    bluetoothctl --timeout "$secs" scan on >"$log" 2>/dev/null &
+    pid=$!
+    for ((i = 0; i < secs; i++)); do
+        sleep 1
+        if sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -q -E "(\[NEW\] Device $MAC|Device $MAC RSSI)"; then
+            found=0
+            break
+        fi
+        kill -0 "$pid" 2>/dev/null || break
+    done
+    kill "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
+    rm -f "$log"
+    return $found
+}
+
+connect_once() {
+    local i
+    for i in 1 2 3; do
+        bluetoothctl connect "$MAC" 2>&1 | grep -q 'Connection successful' && return 0
+        sleep 2
+    done
+    return 1
+}
+
+use_output() {
+    local s i
+    for i in 1 2 3 4 5; do
+        s=$(sink)
+        [ -n "$s" ] && break
+        sleep 1
+    done
+    if [ -z "$s" ]; then
+        warn "Connected, but no JBL audio output yet. Run 'jbl -o' in a few seconds."
+        return 1
+    fi
+    pactl set-default-sink "$s"
+    say "JBL ready: $s"
+}
+
+# Forget the old pairing, then pair, trust and connect. The speaker must be visible now.
+pair_new() {
+    say "Pairing as new..."
+    bluetoothctl remove "$MAC" >/dev/null 2>&1
+    if ! wait_visible 20; then
+        warn "The speaker left pairing mode before pairing finished."
+        say "Press its Bluetooth button again and run: jbl -P"
+        return 1
+    fi
+    if ! bluetoothctl --agent NoInputNoOutput --timeout 25 pair "$MAC" 2>&1 | grep -q 'Pairing successful'; then
+        warn "Pairing failed."
+        say "Keep the speaker in pairing mode and run: jbl -P"
+        return 1
+    fi
+    bluetoothctl trust "$MAC" >/dev/null
+    if ! connect_once; then
+        warn "Paired, but it didn't connect. Run: jbl"
+        return 1
+    fi
+    use_output
+}
+
+# Doctor checklist: one line per check, so you see where it breaks
+checklist() {
+    local s def
+    mark() { if [ "$1" = 0 ]; then printf '  ok    %s\n' "$2"; else printf '  --    %s\n' "$2"; fi; }
+    bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; mark $? "Bluetooth on (this PC)"
+    is_known; mark $? "Paired with this PC"
+    is_connected; mark $? "Connected"
+    s=$(sink)
+    [ -n "$s" ]; mark $? "Audio stream${s:+ ($s)}"
+    def=$(pactl get-default-sink 2>/dev/null)
+    [ -n "$s" ] && [ "$s" = "$def" ]; mark $? "Default audio output"
+}
+
+do_auto() {
+    say "JBL Flip 6 check:"
+    checklist
+    say ""
+    adapter_ready || return 1
+
+    # 1. Already working?
+    if is_connected; then
+        local s def
+        s=$(sink)
+        def=$(pactl get-default-sink 2>/dev/null)
+        if [ -n "$s" ] && [ "$s" = "$def" ]; then
+            say "All good: audio is playing through the JBL."
+            return 0
+        fi
+        if [ -n "$s" ]; then
+            say "Connected; switching audio to the JBL."
+            use_output
+            return
+        fi
+        # Connected but no audio stream: the phone took it over, or the stream died
+        say "Connected but no audio stream (the phone may have taken it over). Reconnecting..."
+        bluetoothctl disconnect "$MAC" >/dev/null 2>&1
+        sleep 1
+    fi
+
+    # 2. Paired: try the existing pairing
+    if is_known; then
+        say "Connecting..."
+        if connect_once; then
+            use_output
+            return
+        fi
+        say "No answer with the existing pairing. Checking whether the speaker is in pairing mode..."
+        if wait_visible 10; then
+            say "The speaker is in pairing mode, so it has forgotten this PC (paired in Windows, or reset)."
+            pair_new
+            return
+        fi
+        warn "Can't reach the speaker. One of these:"
+        say "  - it's off, or out of range (turn it on, bring it closer)"
+        say "  - your phone is using it (turn off the phone's Bluetooth)"
+        say "  - it forgot this PC (paired in Windows, or reset): put it in pairing mode"
+        say "Waiting up to ${TIMEOUT}s for pairing mode (Ctrl+C to stop):"
+        reset_help
+    else
+        say "Not paired with this PC yet."
+        say "Waiting up to ${TIMEOUT}s for the speaker in pairing mode (Ctrl+C to stop):"
+        reset_help
+    fi
+
+    # 3. Not reachable with the old pairing: wait for pairing mode, then pair as new
+    if wait_visible "$TIMEOUT"; then
+        say "Found it."
+        pair_new
+        return
+    fi
+    warn "Speaker not found in ${TIMEOUT}s: it's off, out of range, still held by the phone, or not in pairing mode."
+    say "When it's blinking fast, run jbl again (or a longer wait: jbl -t 120)."
+    return 1
+}
+
+do_connect() {
+    adapter_ready || return 1
+    if ! is_known; then
+        warn "Not paired with this PC. Put the speaker in pairing mode and run: jbl -P"
+        return 1
+    fi
+    bluetoothctl disconnect "$MAC" >/dev/null 2>&1
+    sleep 1
+    if ! connect_once; then
+        warn "The speaker didn't accept the connection: it's off, out of range, held by the"
+        say "  phone, or it forgot this PC (paired in Windows, or reset). Run 'jbl' to find out which."
+        return 1
+    fi
+    use_output
+}
+
+do_find() {
+    adapter_ready || return 1
+    say "Looking for the speaker (up to ${TIMEOUT}s)..."
+    if wait_visible "$TIMEOUT"; then
+        say "Visible: the speaker is on and in pairing mode."
+    else
+        warn "Not visible: it's off, out of range, held by the phone, or not in pairing mode."
+        reset_help
+        return 1
+    fi
+}
+
+# $1 = seconds to look for the speaker before giving up
+do_pair() {
+    local secs=$1
+    adapter_ready || return 1
+    say "Press the speaker's Bluetooth button now if it isn't blinking fast. Looking (up to ${secs}s)..."
+    if ! wait_visible "$secs"; then
+        warn "Speaker not found in ${secs}s."
+        reset_help
+        return 1
+    fi
+    say "Found it."
+    pair_new
+}
+
+do_disconnect() {
+    bluetoothctl disconnect "$MAC" >/dev/null 2>&1
+    say "Disconnected."
+}
+
+do_forget() {
+    if ! is_known; then
+        say "Not paired with this PC; nothing to forget."
+        return 0
+    fi
+    bluetoothctl disconnect "$MAC" >/dev/null 2>&1
+    bluetoothctl remove "$MAC" >/dev/null 2>&1
+    say "Forgotten. To pair again: press the speaker's Bluetooth button, then run: jbl -P"
+}
+
+do_status() {
+    local s def
+    if ! bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; then
+        say "Bluetooth:  off on this PC"
+    fi
+    if ! is_known; then
+        say "Paired:     no (run 'jbl -P' with the speaker in pairing mode)"
+        return 0
+    fi
+    info | grep -E 'Name:|Paired:|Trusted:|Connected:' | sed 's/^[[:space:]]*//'
+    s=$(sink)
+    def=$(pactl get-default-sink 2>/dev/null)
+    if [ -n "$s" ]; then
+        say "Audio:      $s"
+        if [ "$s" = "$def" ]; then say "Default:    yes"; else say "Default:    no (run 'jbl -o')"; fi
+    else
+        say "Audio:      no JBL output"
+    fi
+}
+
+action=auto
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -a | a | --auto | auto)                       action=auto ;;
+        -c | c | --connect | connect)                 action=connect ;;
+        -f | f | --find | find)                       action=find ;;
+        -p | p | --pair | pair)                       action=pair ;;
+        -P | P | --find-pair | find-pair | --setup | setup) action=find-pair ;;
+        -d | d | --disconnect | disconnect)           action=disconnect ;;
+        -F | F | --forget | forget)                   action=forget ;;
+        -o | o | --output | output)                   action=output ;;
+        -s | s | --status | status)                   action=status ;;
+        -t | t | --timeout | timeout)
+            shift
+            case "${1:-}" in
+                '' | *[!0-9]*) say "jbl: --timeout needs a number of seconds" >&2; exit 2 ;;
+            esac
+            TIMEOUT=$1 ;;
+        --timeout=*)
+            TIMEOUT=${1#--timeout=}
+            case "$TIMEOUT" in
+                '' | *[!0-9]*) say "jbl: --timeout needs a number of seconds" >&2; exit 2 ;;
+            esac ;;
+        -h | h | --help | help) usage; exit 0 ;;
+        *) say "jbl: unknown command '$1'" >&2; usage >&2; exit 2 ;;
+    esac
+    shift
+done
+
+case "$action" in
+    auto)       do_auto ;;
+    connect)    do_connect ;;
+    find)       do_find ;;
+    pair)       do_pair 15 ;;
+    find-pair)  do_pair "$TIMEOUT" ;;
+    disconnect) do_disconnect ;;
+    forget)     do_forget ;;
+    output)     use_output ;;
+    status)     do_status ;;
+esac
