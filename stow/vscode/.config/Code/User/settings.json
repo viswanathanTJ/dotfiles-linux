@@ -94,11 +94,40 @@
     },
     // Don't follow symlinks while searching (node_modules is full of them)
     "search.followSymlinks": false,
+    // Quick Open (Ctrl+P) and search also show .gitignored files (.env, local configs);
+    // the dependency, cache and build folders below stay hidden instead
+    "search.useIgnoreFiles": false,
     // Skip dependency and build folders in search and Quick Open (Ctrl+P)
     "search.exclude": {
+        // JavaScript / TypeScript
         "**/node_modules": true,
         "**/dist": true,
-        "**/build": true
+        "**/build": true,
+        "**/.next": true,
+        "**/.turbo": true,
+        "**/coverage": true,
+        // Python
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.venv": true,
+        "**/venv": true,
+        "**/.mypy_cache": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/.tox": true,
+        "**/*.egg-info": true,
+        // Java / Kotlin / Android
+        "**/target": true,
+        "**/.gradle": true,
+        "**/*.class": true,
+        "**/.kotlin": true,
+        "**/.cxx": true,
+        // Go
+        "**/vendor": true,
+        // Flutter / Dart
+        "**/.dart_tool": true,
+        // Logs
+        "**/*.log": true
     },
     // Don't download type definitions into a cache for every package
     "typescript.disableAutomaticTypeAcquisition": true,
