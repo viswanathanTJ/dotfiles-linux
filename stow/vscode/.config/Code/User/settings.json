@@ -18,7 +18,8 @@
     "vim.easymotion": true,
     "vim.incsearch": true,
     "vim.hlsearch": true,
-    "vim.useSystemClipboard": true,
+    // yy / dd / x stay in Vim's own registers; "*y or "+y (and "*p / "+p) use the system clipboard
+    "vim.useSystemClipboard": false,
     // Vim takes no Ctrl keys, so Cmd+F/A/C… (Toshy sends Ctrl+…) keep their normal VS Code behaviour
     "vim.useCtrlKeys": false,
     "vim.handleKeys": {
@@ -136,5 +137,19 @@
     // Remote-SSH: use RemoteCommand from ~/.ssh/config (host "fedora-code" starts bash, since the
     // login shell there is fish and VS Code's setup script needs bash); allow slow Tailscale approvals
     "remote.SSH.enableRemoteCommand": true,
-    "remote.SSH.connectTimeout": 60
+    "remote.SSH.connectTimeout": 60,
+    "explorer.fileNesting.patterns": {
+        "*.ts": "${capture}.js",
+        "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+        "*.jsx": "${capture}.js",
+        "*.tsx": "${capture}.ts",
+        "tsconfig.json": "tsconfig.*.json",
+        "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb, bun.lock",
+        "*.sqlite": "${capture}.${extname}-*",
+        "*.db": "${capture}.${extname}-*",
+        "*.sqlite3": "${capture}.${extname}-*",
+        "*.db3": "${capture}.${extname}-*",
+        "*.sdb": "${capture}.${extname}-*",
+        "*.s3db": "${capture}.${extname}-*"
+    }
 }
