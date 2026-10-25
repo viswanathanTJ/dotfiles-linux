@@ -60,6 +60,13 @@ keymap("User app launchers", {
     # Left Ctrl+Shift+Esc -> Ctrl+Shift+Esc = GNOME shortcut "Force Quit (btop)". In apps Toshy sends
     # physical Left Ctrl as Super, so it needs this rule; Caps (real Ctrl) and terminals pass through.
     C("Shift-Super-Esc"):       C("C-Shift-Esc"),
+    # Alt+Caps+V (or Alt+Left Ctrl+V) -> Super+V = GNOME open / close the notification list
+    C("RC-LC-v"):               C("Super-v"),
+    C("RC-Super-v"):            C("Super-v"),
+    # Alt+Caps+D (or Alt+Left Ctrl+D) -> Ctrl+Alt+Super+D = GNOME shortcut "Clear notifications"
+    # (~/.local/bin/notif-clear): closes every notification, including ones stuck on screen
+    C("RC-LC-d"):               C("C-Alt-Super-d"),
+    C("RC-Super-d"):            C("C-Alt-Super-d"),
     # Alt+Caps+Enter (or Alt+Left Ctrl+Enter) -> Alt+F10 = GNOME maximize / restore the window
     C("RC-LC-Enter"):           C("Alt-F10"),
     C("RC-Super-Enter"):        C("Alt-F10"),
@@ -109,6 +116,17 @@ keymap("User terminal tab switching", {
     # Without this, Caps+[ is Ctrl+[ = Esc, which tmux can't tell apart from Esc.
     C("LC-Left_Brace"):         C("Alt-h"),                     # previous tmux window
     C("LC-Right_Brace"):        C("Alt-l"),                     # next tmux window
+    # Caps+Shift+1..9 = tmux window 1..9: sent as Alt+Shift+N, which ~/.tmux.conf binds (M-! .. M-().
+    # A terminal can't send Ctrl+Shift+digit on its own (it arrives as a plain digit).
+    C("Shift-LC-Key_1"):        C("Shift-Alt-Key_1"),
+    C("Shift-LC-Key_2"):        C("Shift-Alt-Key_2"),
+    C("Shift-LC-Key_3"):        C("Shift-Alt-Key_3"),
+    C("Shift-LC-Key_4"):        C("Shift-Alt-Key_4"),
+    C("Shift-LC-Key_5"):        C("Shift-Alt-Key_5"),
+    C("Shift-LC-Key_6"):        C("Shift-Alt-Key_6"),
+    C("Shift-LC-Key_7"):        C("Shift-Alt-Key_7"),
+    C("Shift-LC-Key_8"):        C("Shift-Alt-Key_8"),
+    C("Shift-LC-Key_9"):        C("Shift-Alt-Key_9"),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     ctx_app_is_terminal

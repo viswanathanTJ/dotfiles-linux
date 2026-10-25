@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# claude-notify: desktop notifications for Claude Code hooks (reads the hook's JSON on stdin).
+#   UserPromptSubmit  remember when the prompt was sent (for the duration shown on "done")
+#   Stop              "Claude finished" + how long it took + the start of the reply
+#   Notification      "Claude needs you" (permission prompt, question, waiting for input)
+# Hooked up in ~/.claude*/settings.json; never fails the hook (always exits 0).
+set -u
+
+input=$(cat)
+field() { jq -r "$1 // empty" <<<"$input" 2>/dev/null; }
+
+event=$(field .hook_event_name)
+session=$(field .session_id)
+stamp="${XDG_RUNTIME_DIR:-/tmp}/claude-notify-${session:-none}"
+
+# Which project (and tmux window, if any) this is, so you know which Claude it was
+project=$(basename "$(field .cwd)")
+where=$project
+if [ -n "${TMUX:-}" ] && [ -n "${TMUX_PANE:-}" ]; then
+    win=$(tmux display-message -p -t "$TMUX_PANE" '#S:#I #W' 2>/dev/null)
+    [ -n "$win" ] && where="$project  (tmux $win)"
+fi
+profile=$(basename "${CLAUDE_CONFIG_DIR:-$HOME/.claude}")
+[ "$profile" != ".claude" ] && where="$where  [${profile#.claude-}]"
+
+notify() { notify-send -a "Claude Code" -i "$1" -u "$2" "$3" "$4" 2>/dev/null; }
+
+case "$event" in
+    UserPromptSubmit)
+        date +%s >"$stamp"
+        ;;
+    Stop)
+        took=""
+        if [ -f "$stamp" ]; then
+            secs=$(($(date +%s) - $(cat "$stamp")))
+            rm -f "$stamp"
+            if [ "$secs" -ge 60 ]; then took=" in $((secs / 60))m $((secs % 60))s"; else took=" in ${secs}s"; fi
+        fi
+        reply=$(field .last_assistant_message | tr '\n' ' ' | cut -c1-160)
+        notify dialog-information normal "Claude finished${took}" "${where}${reply:+
+$reply}"
+        ;;
+    Notification)
+        msg=$(field .message)
+        notify dialog-warning normal "Claude needs you" "${where}
+${msg:-Waiting for your input}"
+        ;;
+esac
+exit 0
