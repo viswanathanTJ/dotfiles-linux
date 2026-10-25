@@ -2,6 +2,9 @@
 add_newline = false
 
 command_timeout = 10000
+# Time allowed to list the current folder (to spot git, python, node... projects). Default 30 ms is
+# too short right after boot, when tmux reopens a dozen shells at once and the disk is busy.
+scan_timeout = 300
 
 [time]
 disabled = false
