@@ -20,8 +20,8 @@ Usage: jbl [COMMAND]     (each also works as a word or bare letter: jbl auto, jb
 Connect, pair and check the JBL Flip 6 ($MAC).
 
   (no command)         check everything (like a doctor), then fix what's wrong (= --auto)
-  -a, --auto           check, then fix: use the JBL if it's already working,
-                       reconnect, or pair again as new; says clearly if the speaker is off,
+  -a, --auto           check, then fix: reconnect (even when it looks fine, as the speaker can be
+                       silent while "connected"), or pair again as new; says clearly if it's off,
                        out of range, held by the phone, or needs pairing mode / a reset
   -c, --connect        reconnect with the existing pairing, then use the JBL for audio
   -f, --find           scan: is the speaker visible (on and in pairing mode)?
@@ -40,8 +40,8 @@ Reset (only if pairing mode doesn't work): hold Play + Volume Up ~10 s until it 
 then turn it on; it starts in pairing mode. Turn off the phone's Bluetooth first.
 
 When to use what:
-  anything                          jbl            (auto)
-  no sound, but "connected"         jbl -c
+  anything, incl. no sound          jbl            (auto)
+  just check, change nothing        jbl -s
   used the speaker in Windows       jbl -P         (then press the speaker's Bluetooth button)
   after resetting the speaker       jbl -P
 EOF
@@ -171,9 +171,13 @@ do_auto() {
         local s def
         s=$(sink)
         def=$(pactl get-default-sink 2>/dev/null)
+        # Everything looks fine, yet you ran jbl: the speaker can be silent while the PC still
+        # streams to it (phone took it over briefly, stale link after sleep), and nothing here can
+        # tell that apart from working. A fresh connection fixes it.
         if [ -n "$s" ] && [ "$s" = "$def" ]; then
-            say "All good: audio is playing through the JBL."
-            return 0
+            say "Looks fine from the PC side; reconnecting anyway (fixes \"connected but no sound\")..."
+            do_connect
+            return
         fi
         if [ -n "$s" ]; then
             say "Connected; switching audio to the JBL."
