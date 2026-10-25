@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# json_key_swap: copy one key's value from a source JSON file into a destination JSON file.
+#
+#   json_key_swap SOURCE DEST KEY
+#
+# The value of KEY in SOURCE replaces KEY in DEST (added if DEST doesn't have it); every other key
+# in DEST is kept. KEY may be nested with dots: a.b.c. Before writing, DEST is backed up to
+# DEST.bak (same permissions), and the new file replaces it in one step with DEST's permissions.
+# Values are never printed, so it's safe for credential files.
+#
+# Example: put the Claude login from a saved copy back into the live file
+#   json_key_swap ~/.claude/.credentials.json.viswa2k ~/.claude/.credentials.json claudeAiOauth
+set -euo pipefail
+
+usage() {
+    sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+    exit "${1:-0}"
+}
+die() { printf 'json_key_swap: %s\n' "$*" >&2; exit 1; }
+
+case "${1:-}" in -h | --help) usage 0 ;; esac
+[ $# -eq 3 ] || usage 2 >&2
+
+src=$1 dest=$2 key=$3
+command -v jq >/dev/null || die "needs jq (sudo dnf install jq)"
+[ -r "$src" ] || die "can't read source: $src"
+[ -r "$dest" ] || die "can't read destination: $dest"
+[ "$(realpath "$src")" != "$(realpath "$dest")" ] || die "source and destination are the same file"
+jq -e . "$src" >/dev/null 2>&1 || die "source isn't valid JSON: $src"
+jq -e . "$dest" >/dev/null 2>&1 || die "destination isn't valid JSON: $dest"
+
+# "a.b.c" -> ["a","b","c"] for getpath/setpath
+path=$(jq -cn --arg k "$key" '$k | split(".")')
+jq -e --argjson p "$path" 'getpath($p) != null' "$src" >/dev/null 2>&1 \
+    || die "key '$key' not found in source: $src"
+
+dir=$(dirname "$dest")
+tmp=$(mktemp "$dir/.json_key_swap.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+
+# Build the new destination: DEST with KEY set to SOURCE's value
+jq --argjson p "$path" --slurpfile s "$src" 'setpath($p; $s[0] | getpath($p))' "$dest" >"$tmp"
+jq -e . "$tmp" >/dev/null || die "result isn't valid JSON; destination left unchanged"
+
+# Backup, then swap in the new file with the destination's permissions
+cp -p "$dest" "$dest.bak"
+chmod --reference="$dest" "$tmp"
+mv -f "$tmp" "$dest"
+trap - EXIT
+
+printf 'Copied "%s" from %s into %s (backup: %s.bak)\n' "$key" "$src" "$dest" "$dest"
