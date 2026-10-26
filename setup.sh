@@ -106,7 +106,6 @@ part_files() { if [ -d "$STOW/$1" ]; then (cd "$STOW/$1" && find . \( -type f -o
 on_branch() {   # $1 = part: are its files in this checkout?
     case "$1" in
         keyboard) [ -f "$HERE/keyboard/toshy_user_apps.py" ] ;;
-        desktops) [ -d "$STOW/desktops" ] ;;
         copyq)    [ -f "$HERE/copyq/paste-ydotool.js" ] ;;
         *)        return 0 ;;
     esac
