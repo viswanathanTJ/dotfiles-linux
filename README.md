@@ -7,6 +7,16 @@ Configs for fish, tmux, Neovim, kitty, VS Code, CopyQ, Mac-style keys (Toshy) an
    (where kitty looks)            (the real file, tracked by git)
 ```
 
+## Branches
+
+| Branch | What | Used on |
+|---|---|---|
+| `main` | Shared core: fish, starship, tmux, Neovim, kitty, VS Code, podman, lock, Teams, shared scripts | — (base of the others) |
+| `fedora` | Core + personal: Toshy / Run or Raise / GNOME shortcuts, desktop-rules extension, CopyQ + ydotool, jbl, notif-clear | Fedora desktop |
+| `ubuntu` | Core + that machine's prompt logo and Claude profiles | Ubuntu laptop |
+
+Check out your machine's branch. Change shared things on `main`, then bring them in: `git switch fedora && git merge main` (same for `ubuntu`). Machine-only changes are committed straight on the machine branch. `./setup.sh` skips parts whose files aren't on the current branch.
+
 ## Quick start
 
 ```fish
