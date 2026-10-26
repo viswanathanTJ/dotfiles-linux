@@ -6,6 +6,17 @@ command_timeout = 10000
 # too short right after boot, when tmux reopens a dozen shells at once and the disk is busy.
 scan_timeout = 300
 
+# Ubuntu logo first, then everything else
+format = "$os$all"
+
+[os]
+disabled = false
+format = "[$symbol]($style)"
+style = "bold #E95420"
+
+[os.symbols]
+Ubuntu = "\uf31b "
+
 # Don't show user@domain or the machine name (shown by default over SSH)
 [username]
 disabled = true
