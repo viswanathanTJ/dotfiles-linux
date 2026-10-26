@@ -50,6 +50,9 @@ keymap("User app launchers", {
     C("RC-LC-e"):            C("C-Alt-e"),                   # Teams: search (Ctrl+Alt+E)
     C("RC-LC-x"):            C("C-Alt-Super-x"),                   # Brave
     C("RC-LC-p"):            C("C-Alt-Super-p"),                   # Postman
+    # Caps+Shift+B -> Ctrl+Alt+Super+Shift+B = GNOME shortcut "JBL speaker" (~/.local/bin/jbl-notify:
+    # runs jbl, result as a notification). Takes Ctrl+Shift+B from apps (Brave bookmarks bar, VS Code build).
+    C("Shift-LC-b"):         C("Shift-C-Alt-Super-b"),
     # Alt+Caps+L (or Alt+Left Ctrl+L) -> Ctrl+Alt+Shift+L = GNOME shortcut "Blank screen"
     # (~/.local/bin/blank-screen; no password while `autolock off`)
     C("RC-LC-l"):            C("C-Alt-Shift-l"),

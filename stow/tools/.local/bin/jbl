@@ -26,8 +26,9 @@ Connect, pair and check the JBL Flip 6 ($MAC).
   -c, --connect        reconnect with the existing pairing, then use the JBL for audio
   -f, --find           scan: is the speaker visible (on and in pairing mode)?
   -p, --pair           forget the old pairing and pair as new, now (speaker in pairing mode)
-  -P, --find-pair      wait for the speaker to show up (up to the timeout), then pair as new;
-      --setup          same; if it never shows up, explains how to reset the speaker
+  -P, --find-pair      forget the old pairing, wait for the speaker in pairing mode (up to the
+      --setup          timeout), then pair as new; if it never shows up, explains how to reset it
+  -FP, --forget-pair   same as -P (forget + pair in one go)
   -d, --disconnect     disconnect the speaker
   -F, --forget         remove the pairing from this PC (pair again with: jbl -P)
   -o, --output         make the JBL the default audio output (it must be connected)
@@ -125,15 +126,19 @@ use_output() {
     say "JBL ready: $s"
 }
 
-# Forget the old pairing, then pair, trust and connect. The speaker must be visible now.
+# Forget the old pairing, wait (up to $1 seconds, default 20) for the speaker in pairing mode, then
+# pair, trust and connect. Forgetting first means a single scan: forgetting after finding it would
+# drop it from the scan results and need a second scan.
 pair_new() {
-    say "Pairing as new..."
+    local secs=${1:-20}
+    say "Forgetting the old pairing; looking for the speaker in pairing mode (up to ${secs}s)..."
     bluetoothctl remove "$MAC" >/dev/null 2>&1
-    if ! wait_visible 20; then
-        warn "The speaker left pairing mode before pairing finished."
-        say "Press its Bluetooth button again and run: jbl -P"
+    if ! wait_visible "$secs"; then
+        warn "Speaker not found in ${secs}s."
+        reset_help
         return 1
     fi
+    say "Found it. Pairing..."
     if ! bluetoothctl --agent NoInputNoOutput --timeout 25 pair "$MAC" 2>&1 | grep -q 'Pairing successful'; then
         warn "Pairing failed."
         say "Keep the speaker in pairing mode and run: jbl -P"
@@ -258,14 +263,8 @@ do_find() {
 do_pair() {
     local secs=$1
     adapter_ready || return 1
-    say "Press the speaker's Bluetooth button now if it isn't blinking fast. Looking (up to ${secs}s)..."
-    if ! wait_visible "$secs"; then
-        warn "Speaker not found in ${secs}s."
-        reset_help
-        return 1
-    fi
-    say "Found it."
-    pair_new
+    say "Press the speaker's Bluetooth button now if it isn't blinking fast."
+    pair_new "$secs"
 }
 
 do_disconnect() {
@@ -311,6 +310,7 @@ while [ $# -gt 0 ]; do
         -f | f | --find | find)                       action=find ;;
         -p | p | --pair | pair)                       action=pair ;;
         -P | P | --find-pair | find-pair | --setup | setup) action=find-pair ;;
+        -FP | FP | -PF | PF | --forget-pair | forget-pair) action=find-pair ;;
         -d | d | --disconnect | disconnect)           action=disconnect ;;
         -F | F | --forget | forget)                   action=forget ;;
         -o | o | --output | output)                   action=output ;;

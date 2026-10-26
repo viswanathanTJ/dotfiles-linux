@@ -103,7 +103,7 @@ gnome_keyboard() {
     run "gsettings set org.gnome.settings-daemon.plugins.media-keys terminal \"[]\" 2>/dev/null || true"
     local base=org.gnome.settings-daemon.plugins.media-keys
     local kb=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
-    run "gsettings set $base custom-keybindings \"['$kb/copyq/', '$kb/screen-ocr/', '$kb/blank-screen/', '$kb/force-quit/', '$kb/notif-clear/']\""
+    run "gsettings set $base custom-keybindings \"['$kb/copyq/', '$kb/screen-ocr/', '$kb/blank-screen/', '$kb/force-quit/', '$kb/notif-clear/', '$kb/jbl/']\""
     run "gsettings set $base.custom-keybinding:$kb/copyq/ name 'CopyQ'"
     run "gsettings set $base.custom-keybinding:$kb/copyq/ command 'copyq show'"
     run "gsettings set $base.custom-keybinding:$kb/copyq/ binding '<Shift><Control><Alt>v'"
@@ -118,7 +118,11 @@ gnome_keyboard() {
     run "gsettings set $base.custom-keybinding:$kb/force-quit/ binding '<Shift><Control>Escape'"
     run "gsettings set $base.custom-keybinding:$kb/notif-clear/ name 'Clear notifications'"
     run "gsettings set $base.custom-keybinding:$kb/notif-clear/ command '$HOME/.local/bin/notif-clear'"
-    run "gsettings set $base.custom-keybinding:$kb/notif-clear/ binding '<Control><Alt><Super>d'"    if gsettings list-schemas | grep -qx org.gnome.shell.extensions.dash-to-dock; then
+    run "gsettings set $base.custom-keybinding:$kb/notif-clear/ binding '<Control><Alt><Super>d'"
+    run "gsettings set $base.custom-keybinding:$kb/jbl/ name 'JBL speaker'"
+    run "gsettings set $base.custom-keybinding:$kb/jbl/ command '$HOME/.local/bin/jbl-notify'"
+    run "gsettings set $base.custom-keybinding:$kb/jbl/ binding '<Shift><Control><Alt><Super>b'"
+    if gsettings list-schemas | grep -qx org.gnome.shell.extensions.dash-to-dock; then
         say "Ubuntu dock found: always auto-hide"
         run "gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false"
         run "gsettings set org.gnome.shell.extensions.dash-to-dock autohide true"

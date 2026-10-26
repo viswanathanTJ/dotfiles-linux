@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# jbl-notify: run `jbl` (auto: check, then reconnect or pair) from a keyboard shortcut and show the
+# result as a notification, since there's no terminal to print to. Caps+Shift+B (Toshy -> GNOME).
+set -u
+
+# One notification, updated in place: "Connecting..." then the result
+id=$(notify-send -p -a JBL -i audio-speakers "JBL Flip 6" "Checking and connecting..." 2>/dev/null)
+out=$("$HOME/.local/bin/jbl" "$@" 2>&1)
+status=$?
+
+# The checklist lines are noise here; keep the outcome (last few lines)
+summary=$(printf '%s\n' "$out" | grep -v -E '^(JBL Flip 6 check:|  (ok|--)  |$)' | tail -4)
+if [ $status -eq 0 ]; then
+    notify-send -r "${id:-0}" -a JBL -i audio-speakers "JBL connected" "$summary"
+else
+    notify-send -r "${id:-0}" -a JBL -i dialog-warning "JBL: needs attention" "$summary"
+fi
