@@ -102,6 +102,15 @@ pkg_mgr() { if have apt-get; then echo apt; elif have dnf; then echo dnf; else e
 
 # files of a stow part, relative to $HOME
 part_files() { if [ -d "$STOW/$1" ]; then (cd "$STOW/$1" && find . \( -type f -o -type l \) | sed 's|^\./||' | sort); fi; }
+# Machine-specific parts live only on the machine branches (fedora, ubuntu); main is the shared core.
+on_branch() {   # $1 = part: are its files in this checkout?
+    case "$1" in
+        keyboard) [ -f "$HERE/keyboard/toshy_user_apps.py" ] ;;
+        desktops) [ -d "$STOW/desktops" ] ;;
+        copyq)    [ -f "$HERE/copyq/paste-ydotool.js" ] ;;
+        *)        return 0 ;;
+    esac
+}
 is_our_link() {   # $1 = path relative to $HOME, $2 = part
     [ -L "$HOME/$1" ] && [ "$(readlink -f "$HOME/$1")" = "$(readlink -f "$STOW/$2/$1")" ]
 }
@@ -412,6 +421,10 @@ case "$ACTION" in
         if want packages; then do_packages; fi
         for p in "${PARTS[@]}"; do
             if want "$p"; then
+                if ! on_branch "$p"; then
+                    say "Skipping $p: not on branch $(git -C "$HERE" branch --show-current 2>/dev/null) (it's on the machine branches: git switch fedora / ubuntu)"
+                    continue
+                fi
                 if [ "$ACTION" = adopt ]; then adopt_part "$p"; fi
                 link_part "$p"
                 apply_extras "$p"
