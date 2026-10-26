@@ -41,7 +41,6 @@
     // Relative line numbers for 5j / 12dd (VS Code draws the numbers, not Neovim)
     "editor.lineNumbers": "relative",
     "terminal.integrated.fontSize": 12,
-    "markdown.preview.fontSize": 14,
     "chat.fontSize": 15,
     "chat.editor.fontSize": 14,
     "debug.console.fontSize": 14,
@@ -151,5 +150,6 @@
         "*.db3": "${capture}.${extname}-*",
         "*.sdb": "${capture}.${extname}-*",
         "*.s3db": "${capture}.${extname}-*"
-    }
+    },
+    "redhat.telemetry.enabled": true
 }
