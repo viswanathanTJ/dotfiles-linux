@@ -118,7 +118,8 @@ gnome_keyboard() {
     run "gsettings set $base.custom-keybinding:$kb/force-quit/ binding '<Shift><Control>Escape'"
     run "gsettings set $base.custom-keybinding:$kb/notif-clear/ name 'Clear notifications'"
     run "gsettings set $base.custom-keybinding:$kb/notif-clear/ command '$HOME/.local/bin/notif-clear'"
-    run "gsettings set $base.custom-keybinding:$kb/notif-clear/ binding '<Control><Alt><Super>d'"    if gsettings list-schemas | grep -qx org.gnome.shell.extensions.dash-to-dock; then
+    run "gsettings set $base.custom-keybinding:$kb/notif-clear/ binding '<Control><Alt><Super>d'"
+    if gsettings list-schemas | grep -qx org.gnome.shell.extensions.dash-to-dock; then
         say "Ubuntu dock found: always auto-hide"
         run "gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false"
         run "gsettings set org.gnome.shell.extensions.dash-to-dock autohide true"
