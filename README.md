@@ -13,7 +13,7 @@ Configs for fish, tmux, Neovim, kitty, VS Code, CopyQ, Mac-style keys (Toshy) an
 |---|---|---|
 | `main` | Shared core: fish, starship, tmux, Neovim, kitty, VS Code, podman, lock, Teams, shared scripts | — (base of the others) |
 | `fedora` | Core + personal: Toshy / Run or Raise / GNOME shortcuts, desktop-rules extension, CopyQ + ydotool, jbl, notif-clear | Fedora desktop |
-| `ubuntu` | Core + that machine's prompt logo and Claude profiles | Ubuntu laptop |
+| `ubuntu` | Core + Toshy / Run or Raise shortcuts (Chrome + Teams there via `shortcuts.local.conf`), desktop-rules extension, that machine's prompt logo and Claude profiles | Ubuntu laptop |
 
 Check out your machine's branch. Change shared things on `main`, then bring them in: `git switch fedora && git merge main` (same for `ubuntu`). Machine-only changes are committed straight on the machine branch. `./setup.sh` skips parts whose files aren't on the current branch.
 
@@ -236,7 +236,7 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `copyq` | `copyq/ydotoold.service`, `copyq/paste-ydotool.js` (copied, not linked) | Autostart entry that runs CopyQ through XWayland, so it sees the clipboard on Wayland. Enter pastes: CopyQ presses Ctrl+V (Ctrl+Shift+V in terminals) through ydotool's virtual keyboard, because GNOME answers CopyQ's own fake keys with a Remote Desktop prompt. Needs the `ydotool` package and the `input` group; installs the `ydotoold` user service and tells Toshy to ignore its keyboard |
 | `tools` | `screen-ocr`, `blank-screen` | btop: `proc_sorting = "memory"` (the one btop setting changed) |
 | `podman` | fish `docker` → podman wrapper | Docker Hub short names |
-| `keyboard` | Run or Raise `shortcuts.conf`, fish `reload-shortcuts` | GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
+| `keyboard` | fish `reload-shortcuts` | Run or Raise `shortcuts.conf` (built by `reload-shortcuts` from `keyboard/run-or-raise-shortcuts.conf` + this machine's `shortcuts.local.conf`), GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
 | `desktops` | `desktop-rules@local` extension (Teams 1, Brave 2, kitty + VS Code 3, others 4) | 4 fixed desktops, Super+Alt+1…4 (Left Ctrl+1…4, Caps+1…4 and Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |
 | `lock` | fish `autolock`, `autologin` | No password after screen blank or suspend |
 | `teams` | — | Teams for Linux `"menubar": "hidden"` |
@@ -260,8 +260,9 @@ The repo holds only settings that were changed on purpose, and nothing personal.
 |---|---|---|
 | `~/.gitconfig` (name, email, GitHub sign-in) | `examples/gitconfig.example` | `./setup.sh git` (asks name and email) |
 | `~/.config/fish/conf.d/90-local.fish` (project folders, machine-only aliases) | `examples/90-local.fish.example` | you: `cp examples/90-local.fish.example ~/.config/fish/conf.d/90-local.fish` |
+| `~/.config/run-or-raise/shortcuts.local.conf` (machine-only launchers: Alt+Caps+X browser, Alt+Caps+M) | `examples/run-or-raise-shortcuts.local.conf.example` | `reload-shortcuts` (copies the example if missing; then edit it) |
 
-`.gitignore` lists both, so they can't be committed by accident.
+`.gitignore` lists them, so they can't be committed by accident.
 
 ## Things that aren't plain links
 

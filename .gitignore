@@ -5,3 +5,4 @@ __pycache__/
 .gitconfig
 .gitconfig.local
 **/conf.d/90-local.fish
+**/run-or-raise/shortcuts.local.conf
