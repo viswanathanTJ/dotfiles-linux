@@ -169,16 +169,19 @@ PY"
 
 # ---------------------------------------------------------------- desktops
 gnome_desktops() {
-    say "4 fixed desktops; Super+Alt+1..4 switches (Toshy sends it for Alt+Caps+1..4)"
+    say "4 fixed desktops; Super+Alt+1..4 or Ctrl+Shift+1..4 switches (Toshy: Alt+Caps+N, Caps+Shift+N)"
     run "gsettings set org.gnome.mutter dynamic-workspaces false"
     run "gsettings set org.gnome.desktop.wm.preferences num-workspaces 4"
     for i in 1 2 3 4; do
-        run "gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-$i \"['<Super><Alt>$i']\""
+        run "gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-$i \"['<Super><Alt>$i', '<Shift><Control>$i']\""
     done
     run "gsettings set org.gnome.shell disable-user-extensions false"
     # desktop-rules@local: app -> desktop rules (it moves windows from an idle callback now; on
     # GNOME 46 it crashed the session). If it ever logs you out: gnome-extensions disable desktop-rules@local
-    set_extensions +desktop-rules@local -auto-move-windows@gnome-shell-extensions.gcampax.github.com
+    # (the extension itself is only on the fedora branch)
+    if [ -d "$STOW/desktops" ]; then
+        set_extensions +desktop-rules@local -auto-move-windows@gnome-shell-extensions.gcampax.github.com
+    fi
 
     say "Touchpad (Wayland): 3-finger left/right = window switcher, 4-finger left/right = desktops"
     local tgc=touchpad-gesture-customization@coooolapps.com
