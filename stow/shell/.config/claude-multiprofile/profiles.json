@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "name": "b",
+      "type": "code",
+      "desktop": null,
+      "code": {
+        "configDir": "/home/16931/.claude-b",
+        "aliasName": "cw",
+        "shell": "fish",
+        "rcPath": "/home/16931/.config/fish/config.fish",
+        "ghConfigDir": null
+      },
+      "createdAt": "2026-10-20T06:13:49.290Z"
+    },
+    {
+      "name": "c",
+      "type": "code",
+      "desktop": null,
+      "code": {
+        "configDir": "/home/16931/.claude-c",
+        "aliasName": "claude-c",
+        "shell": "fish",
+        "rcPath": "/home/16931/.config/fish/config.fish",
+        "ghConfigDir": null
+      },
+      "createdAt": "2026-10-23T06:33:25.635Z"
+    },
+    {
+      "name": "test",
+      "type": "code",
+      "desktop": null,
+      "code": {
+        "configDir": "/home/16931/.claude-test",
+        "aliasName": "claude-test",
+        "shell": "fish",
+        "rcPath": "/home/16931/.config/fish/config.fish",
+        "ghConfigDir": null
+      },
+      "createdAt": "2026-10-23T10:18:20.563Z"
+    }
+  ]
+}
