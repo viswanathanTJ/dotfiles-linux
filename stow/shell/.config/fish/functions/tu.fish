@@ -1,3 +1,3 @@
-function tu --description "Tailscale up (Tailscale DNS stays off)"
-    sudo tailscale up --netfilter-mode=on --accept-dns=false $argv
+function tu --description "Tailscale up (Tailscale DNS off, Tailscale SSH on)"
+    sudo tailscale up --netfilter-mode=on --accept-dns=false --ssh $argv
 end
