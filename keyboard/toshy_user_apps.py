@@ -116,17 +116,8 @@ keymap("User terminal tab switching", {
     # Without this, Caps+[ is Ctrl+[ = Esc, which tmux can't tell apart from Esc.
     C("LC-Left_Brace"):         C("Alt-h"),                     # previous tmux window
     C("LC-Right_Brace"):        C("Alt-l"),                     # next tmux window
-    # Caps+Shift+1..9 = tmux window 1..9: sent as Alt+Shift+N, which ~/.tmux.conf binds (M-! .. M-().
-    # A terminal can't send Ctrl+Shift+digit on its own (it arrives as a plain digit).
-    C("Shift-LC-Key_1"):        C("Shift-Alt-Key_1"),
-    C("Shift-LC-Key_2"):        C("Shift-Alt-Key_2"),
-    C("Shift-LC-Key_3"):        C("Shift-Alt-Key_3"),
-    C("Shift-LC-Key_4"):        C("Shift-Alt-Key_4"),
-    C("Shift-LC-Key_5"):        C("Shift-Alt-Key_5"),
-    C("Shift-LC-Key_6"):        C("Shift-Alt-Key_6"),
-    C("Shift-LC-Key_7"):        C("Shift-Alt-Key_7"),
-    C("Shift-LC-Key_8"):        C("Shift-Alt-Key_8"),
-    C("Shift-LC-Key_9"):        C("Shift-Alt-Key_9"),
+    # Caps+1..9 and Left Ctrl+1..9 reach kitty as Ctrl+N, which kitty.conf sends to tmux as window N.
+    # Caps+Shift+N is left alone: it arrives as Ctrl+Shift+N = GNOME desktop N (gnome/settings.sh).
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     ctx_app_is_terminal
@@ -153,16 +144,13 @@ keymap("User Caps word erase", {
 )
 
 keymap("User desktop numbers", {
-    # Mac Control+1..4 = desktop 1..4: physical Left Ctrl (Super in apps, Ctrl in terminals) or Caps (Ctrl)
-    # -> Super+Alt+1..4 = GNOME switch-to-workspace-1..4. Tabs by number are on Alt (Cmd) + 1..9.
+    # Physical Left Ctrl+1..4 in apps (Super there) -> Super+Alt+1..4 = GNOME switch-to-workspace-1..4.
+    # Caps+1..4 is no longer a desktop key (in terminals it's tmux window N); Caps+Shift+1..4 is
+    # Ctrl+Shift+1..4 = desktop N everywhere. Tabs by number are on Alt (Cmd) + 1..9.
     C("Super-Key_1"):           C("Super-Alt-Key_1"),
     C("Super-Key_2"):           C("Super-Alt-Key_2"),
     C("Super-Key_3"):           C("Super-Alt-Key_3"),
     C("Super-Key_4"):           C("Super-Alt-Key_4"),
-    C("LC-Key_1"):              C("Super-Alt-Key_1"),
-    C("LC-Key_2"):              C("Super-Alt-Key_2"),
-    C("LC-Key_3"):              C("Super-Alt-Key_3"),
-    C("LC-Key_4"):              C("Super-Alt-Key_4"),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     not ctx_app_is_remote
