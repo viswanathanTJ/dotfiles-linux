@@ -9,7 +9,7 @@ STOW="$HERE/stow"
 DRY=0
 ACTION=""
 NAMES=()
-PARTS=(packages shell git tmux nvim kitty vscode copyq tools podman keyboard desktops lock teams)
+PARTS=(packages shell git tmux nvim kitty vscode copyq tools podman keyboard desktops lock teams memory)
 
 describe() {
     case "$1" in
@@ -27,6 +27,7 @@ describe() {
         desktops) echo "4 fixed desktops, Alt+Caps+1..4, touchpad: 3-finger app switcher, 4-finger desktops (Wayland)" ;;
         lock)     echo "No password after screen blank or suspend; autolock / autologin commands" ;;
         teams)    echo "Teams for Linux: menu bar hidden (fixes Win+Backspace word delete)" ;;
+        memory)   echo "Stop out-of-memory freezes: earlyoom (sudo) kills Gradle/emulators first; memory caps for Gradle builds" ;;
     esac
 }
 
@@ -42,6 +43,7 @@ canon() {
         workspaces|desktop|apps) echo desktops ;;
         screensaver|autolock) echo lock ;;
         teams-for-linux) echo teams ;;
+        oom|earlyoom|ram|gradle) echo memory ;;
         *) echo "$1" ;;
     esac
 }
@@ -294,6 +296,48 @@ claude_statusline() {
     done
 }
 
+# Out-of-memory protection: earlyoom (system service, sudo) and memory caps in ~/.gradle/gradle.properties
+memory_setup() {
+    local want_args cur f="$HOME/.gradle/gradle.properties" k line
+    if ! have earlyoom; then
+        say "Installing earlyoom (asks for your password)"
+        case "$(pkg_mgr)" in
+            apt) run "sudo apt-get install -y earlyoom" ;;
+            dnf) run "sudo dnf install -y earlyoom" ;;
+            *)   echo "    No apt or dnf: install earlyoom by hand, then ./setup.sh memory"; return ;;
+        esac
+    fi
+    want_args=$(grep '^EARLYOOM_ARGS=' "$HERE/memory/earlyoom")
+    cur=$(grep '^EARLYOOM_ARGS=' /etc/default/earlyoom 2>/dev/null || true)
+    if [ "$cur" != "$want_args" ]; then
+        say "earlyoom settings -> /etc/default/earlyoom (asks for your password)"
+        run "sudo cp \"$HERE/memory/earlyoom\" /etc/default/earlyoom && sudo systemctl enable earlyoom && sudo systemctl restart earlyoom"
+    elif ! systemctl is-enabled -q earlyoom 2>/dev/null || ! systemctl is-active -q earlyoom; then
+        say "Starting earlyoom (asks for your password)"
+        run "sudo systemctl enable --now earlyoom"
+    else
+        echo "    earlyoom: running with the repo settings"
+    fi
+    # Gradle: only our keys are set; anything else in the file (signing keys, tokens) stays as it is
+    if [ ! -f "$f" ]; then
+        say "Gradle memory caps -> ~/.gradle/gradle.properties"
+        run "mkdir -p \"$HOME/.gradle\" && cp \"$HERE/memory/gradle.properties\" \"$f\""
+        return
+    fi
+    while IFS= read -r line; do
+        case "$line" in ''|'#'*) continue ;; esac
+        k=${line%%=*}
+        if ! grep -qxF "$line" "$f"; then
+            say "Gradle: $line"
+            if grep -q "^$k=" "$f"; then
+                run "cp -a \"$f\" \"$f.bak-memory\" && sed -i 's|^$k=.*|$line|' \"$f\""
+            else
+                run "printf '%s\\n' '$line' >> \"$f\""
+            fi
+        fi
+    done < "$HERE/memory/gradle.properties"
+}
+
 apply_extras() {   # $1 = part: the non-file steps
     case "$1" in
         shell)
@@ -409,6 +453,7 @@ PY"
         desktops) if have gsettings; then gnome_desktops; fi ;;
         lock)     if have gsettings; then gnome_lock; fi ;;
         teams)    teams_settings ;;
+        memory)   memory_setup ;;
     esac
 }
 
@@ -416,6 +461,7 @@ reset_part() {   # $1 = part: config files out (backed up), settings back to def
     local p=$1 f n=0
     if [ "$p" = packages ]; then echo "    'packages' has nothing to reset (remove programs with apt/dnf)"; return; fi
     if [ "$p" = git ]; then echo "    'git': your ~/.gitconfig is personal and is left alone"; return; fi
+    if [ "$p" = memory ]; then echo "    'memory': to stop earlyoom: sudo systemctl disable --now earlyoom; Gradle caps: edit ~/.gradle/gradle.properties"; return; fi
     while IFS= read -r f; do
         if is_our_link "$f" "$p"; then
             run "rm \"$HOME/$f\""; n=$((n + 1))   # just our link: the content is safe in the repo
