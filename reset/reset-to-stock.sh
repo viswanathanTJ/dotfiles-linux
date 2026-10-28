@@ -29,8 +29,8 @@ EXTRA_DELETE=()
 [ -f "$HERE/local.conf" ] && . "$HERE/local.conf"
 
 # the order matters: login shell back to bash before fish is removed, logins after the apps
-ORDER=(autostart toshy shortcuts extensions launchers gnome configs shell tailscale rustdesk wine apps system logins appdata caches)
-ROOT_MODS=" toshy configs shell tailscale rustdesk wine apps system "
+ORDER=(autostart toshy shortcuts extensions launchers gnome configs shell tailscale rustdesk wine apps devstack m365 system logins appdata caches)
+ROOT_MODS=" toshy configs shell tailscale rustdesk wine apps devstack m365 system "
 
 # personal packages (checked with apt-get -s: removing them takes nothing else with it)
 APPS_PKGS=(zapzap copyq kitty tmux btop eza fd-find ripgrep jq gh stow ydotool dpscreenocr tesseract-ocr tesseract-ocr-eng
@@ -41,7 +41,9 @@ APPS_PKGS=(zapzap copyq kitty tmux btop eza fd-find ripgrep jq gh stow ydotool d
 APPS_AUTO=(libcairo2-dev libcjson-dev libconfig-dev libdbus-1-dev libgirepository-2.0-dev libgirepository1.0-dev
     libjpeg-dev libsystemd-dev libwayland-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxt-dev
     wayland-protocols python3-dev gir1.2-ayatanaappindicator3-0.1 libnotify-bin libsecret-tools libfuse2t64
-    libqt5webkit5 python3-tk python3-netifaces libprotobuf23)
+    python3-tk python3-netifaces libprotobuf23)
+DEV_PKGS=(elasticsearch podman podman-compose podman-docker uidmap slirp4netns passt fuse-overlayfs obsidian)
+M365_PKGS=(teams-for-linux onedrive linux-entra-sso)
 WINE_PKGS=(wine wine32:i386 wine64 wine-common libwine:amd64 libwine:i386 fonts-wine)
 
 describe() {
@@ -58,7 +60,9 @@ describe() {
         rustdesk)   echo "Remove RustDesk and its config" ;;
         wine)       echo "Wine (64 + 32-bit), its menu entries, the Wine prefixes (~/.wine*), and the i386 architecture if nothing else uses it" ;;
         apps)       echo "Every personal package: ZapZap, Telegram, VibeTyper, CopyQ, kitty, tmux, fish, btop, eza, ripgrep, fd, jq, gh, glow, uv, stow, ydotool, OCR, FileZilla, Flatpak, x11vnc, sshfs, Ruby, gedit, Cheese, … + Neovim, starship, FiraCode, PPAs, Toshy build libraries (apt autoremove)" ;;
-        system)     echo "System tweaks: inotify watch limit (sysctl), touchpad speed (hwdb)" ;;
+        devstack)   echo "MongoDB + Compass, Elasticsearch, Podman (+ docker shim, compose, containers), Go, Obsidian, Postman: packages, repos, data, configs" ;;
+        m365)       echo "Teams for Linux, OneDrive client (signed out first), Entra SSO for Chrome: packages, repos, configs" ;;
+        system)     echo "System tweaks: inotify watch limit (sysctl), touchpad speed (hwdb), plus local_system() from local.conf" ;;
         logins)     echo "Sign out + wipe: SSH keys and config, git identity, GitHub (gh), Claude, browser profiles, keyrings, GPG, OneDrive sign-out, app logins" ;;
         appdata)    echo "Personal app data: messages, VS Code/Obsidian/Postman/Compass settings, Wine prefixes, shell history, recent files" ;;
         caches)     echo "Caches and junk: ~/.cache, npm, gradle, Trash, core dumps" ;;
@@ -74,6 +78,8 @@ canon() {
         fish|bash|tmux|kitty|nvim|starship) echo shell ;;
         ssh|git|gh|github|claude|browsers|secrets|login) echo logins ;;
         lock|lockscreen|screensaver|autolock|autologin|config|dotfiles) echo configs ;;
+        dev|mongo|mongodb|elastic|elasticsearch|podman|docker|go|golang|obsidian|postman) echo devstack ;;
+        microsoft|teams|onedrive|entra|sso) echo m365 ;;
         cache) echo caches ;;
         *) echo "$1" ;;
     esac
@@ -398,16 +404,54 @@ mod_apps() {
         && run user fc-cache -f
 }
 
+mod_devstack() {
+    local h="$THOME" p pk=("${DEV_PKGS[@]}") esc
+    # Podman keeps image layers under sub-UIDs that a plain rm can't delete
+    command -v podman >/dev/null && run user podman system reset --force
+    mapfile -t -O "${#pk[@]}" pk < <(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 'mongodb-*' 2>/dev/null | awk '/^ii/{print $2}')
+    purge "${pk[@]}"
+    remove root /etc/apt/sources.list.d/mongodb-org-*.list /usr/share/keyrings/mongodb-server-*.gpg \
+        /etc/apt/sources.list.d/elastic-*.list /usr/share/keyrings/elasticsearch-keyring.gpg \
+        /var/lib/mongodb /var/log/mongodb /etc/mongod.conf /etc/mongod.conf.bak /etc/systemd/system/mongod.service.d \
+        /var/lib/elasticsearch /var/log/elasticsearch /etc/elasticsearch /etc/containers/nodocker \
+        /usr/local/go /opt/Postman /usr/local/bin/postman /opt/Obsidian \
+        && run root systemctl daemon-reload
+    # the sub-UID/GID ranges added for rootless Podman
+    esc=$(printf '%s' "$TUSER" | sed 's/[][\.*^$/]/\\&/g')
+    if grep -qs "^$TUSER:" /etc/subuid /etc/subgid; then
+        run root sed -i "/^$esc:/d" /etc/subuid /etc/subgid
+    fi
+    remove user "$h/go" "$h/.cache/go-build" "$h/.config/go" "$h/.local/share/containers" "$h/.config/containers" \
+        "$h/.local/share/applications/postman.desktop" "$h/Postman"
+}
+
+mod_m365() {
+    # sign OneDrive out before anything else, so a later sync can't delete the files in the cloud
+    if [ -d "$THOME/.config/onedrive" ] && command -v onedrive >/dev/null; then
+        user_units_off onedrive.service
+        as_user pgrep -x onedrive >/dev/null && run user pkill -x onedrive
+        run user onedrive --logout
+    fi
+    as_user pgrep -f teams-for-linux >/dev/null && run user pkill -f teams-for-linux
+    purge "${M365_PKGS[@]}"
+    remove root /etc/apt/sources.list.d/teams-for-linux.list /etc/apt/keyrings/teams-for-linux.asc \
+        /etc/apt/sources.list.d/onedrive.list /usr/share/keyrings/obs-onedrive.gpg /opt/teams-for-linux \
+        /etc/opt/chrome/native-messaging-hosts/linux_entra_sso.json
+    remove user "$THOME/.config/onedrive" "$THOME/.config/teams-for-linux"
+}
+
 mod_system() {
     remove root /etc/sysctl.d/60-inotify-watches.conf && run root sysctl --system
     remove root /etc/udev/hwdb.d/61-touchpad-speed.hwdb && run root systemd-hwdb update
+    # machine-only system changes (local.conf)
+    declare -F local_system >/dev/null && local_system
     return 0
 }
 
 mod_logins() {
     local h="$THOME"
-    # OneDrive: sign out first; the synced files in ~/OneDrive stay unless you use --delete
-    if [ -d "$h/.config/onedrive" ] && command -v onedrive >/dev/null; then
+    # OneDrive: sign out (the 'm365' part does this when it runs); files in ~/OneDrive stay unless you use --delete
+    if [[ " ${MODS[*]} " != *" m365 "* ]] && [ -d "$h/.config/onedrive" ] && command -v onedrive >/dev/null; then
         user_units_off onedrive.service
         run user onedrive --logout
         remove user "$h"/.config/onedrive/items.sqlite3*
@@ -420,7 +464,8 @@ mod_logins() {
         "$h/.gnome/apps" "$h/.local/share/desktop-directories/chrome-apps.directory" \
         "$h/.config/google-chrome" "$h/.config/google-chrome-headless" "$h/.config/chromium" "$h/.config/BraveSoftware" \
         "$h/.config/vivaldi" "$h/.config/opera" "$h/.config/microsoft-edge" "$h/.mozilla" "$h/snap/firefox" "$h/.pki" \
-        "$h/.local/share/keyrings" "$h/.gnupg" "$h/.config/goa-1.0" "$h/.config/teams-for-linux" \
+        "$h/.local/share/keyrings" "$h/.gnupg" "$h/.config/goa-1.0" \
+        $([[ " ${MODS[*]} " == *" m365 "* ]] || printf '%q' "$h/.config/teams-for-linux") \
         "$h/.config/filezilla" "$h/.putty" "$h/.config/remmina" "$h/.local/share/remmina" "$h/.config/freerdp" \
         "$h/.config/teamviewer" "$h/.local/share/teamviewer15" "$h/.copilot" "$h/.cursor" "$h/.pi" \
         "$h/.npmrc" "$h/.docker" "$h/.Genymobile" \
@@ -599,6 +644,12 @@ run_mods() {
     say ""
     for m in "${MODS[@]}"; do cat "$JOBDIR/part-$m.log"; say ""; done
     apt_queue_run
+    # machine-only last steps (local.conf), after everything else has finished
+    if declare -F local_last >/dev/null; then
+        CUR=last
+        local_last
+        CUR=""
+    fi
 }
 
 finish() {

@@ -10,3 +10,16 @@ EXTRA_REMOVE_launchers=("~/.local/share/applications/some-work-tool.desktop")
 
 # More folders --delete asks about
 EXTRA_DELETE=("~/Projects")
+
+# Optional hooks. They can use the script's helpers:
+#   run <user|root> <command...>      runs it (only prints it in a dry run)
+#   remove <user|root> <path...>      deletes the paths that exist
+#   log "text"                        writes to the log
+# local_system: runs inside the 'system' part, for system files you changed by hand
+local_system() {
+    remove root /etc/example-tweak.conf
+}
+# local_last: runs after everything else (after apt), e.g. giving up admin rights
+local_last() {
+    id -nG "$TUSER" | tr ' ' '\n' | grep -qx sudo && run root gpasswd -d "$TUSER" sudo
+}

@@ -88,10 +88,14 @@ The log shows `done: <part>` as each part finishes, then each part's detailed st
 | `rustdesk` [sudo] | Removes RustDesk and its config |
 | `wine` [sudo] | Removes Wine (64- and 32-bit), the `~/.wine*` prefixes and Wine's menu entries, and drops the 32-bit (i386) architecture once no 32-bit package is left |
 | `apps` [sudo] | Removes the personal packages: ZapZap, Telegram, VibeTyper, CopyQ, kitty, tmux, fish, btop, eza, ripgrep, fd, jq, gh, glow, uv, stow, ydotool, OCR, FileZilla, Flatpak, x11vnc, sshfs, adb, 7zip, Ruby, gedit, Cheese and more. Also Neovim, starship, FiraCode fonts and the fish + dpScreenOCR PPAs. The build libraries Toshy installed are marked "automatic", so `apt autoremove` deletes the ones nothing else needs. fish goes only once it's no longer your login shell. |
-| `system` [sudo] | Removes the inotify watch-limit tweak and the touchpad hwdb file |
+| `devstack` [sudo] | MongoDB + Compass, Elasticsearch, Podman (+ the `docker` shim, compose, all containers and images), Go, Obsidian, Postman: packages, apt repos, data in `/var/lib`, configs, and the Podman sub-UID ranges in `/etc/subuid`/`/etc/subgid` |
+| `m365` [sudo] | Teams for Linux, the OneDrive client (signed out first, so the cloud files are safe) and Entra SSO for Chrome: packages, apt repos, configs |
+| `system` [sudo] | Removes the inotify watch-limit tweak and the touchpad hwdb file, then runs `local_system()` from `local.conf` (system files you changed by hand on that machine) |
 | `logins` | Signs out of OneDrive and deletes `~/.ssh` (keys + config), `.gitconfig`, git credentials, GitHub CLI (`gh`), all Claude data (every `~/.claude*` profile, Claude Desktop, state, caches), all Chrome data (profiles, web apps, caches), every other browser profile, GNOME keyrings, GPG, and the logins of Teams, FileZilla, PuTTY, Remmina, TeamViewer, Copilot, Cursor, Genymotion and adb |
 | `appdata` | Telegram/ZapZap messages, VS Code/Obsidian/Postman/Compass settings, shell history, recent files |
 | `caches` | `~/.cache`, npm, gradle, Trash, core dumps |
+
+Last of all, after apt, the script runs `local_last()` from `local.conf` if there is one. Use it for steps that must come at the very end, such as leaving the `sudo` group.
 
 ## Things the script can't do (do these by hand)
 
