@@ -29,8 +29,8 @@ EXTRA_DELETE=()
 [ -f "$HERE/local.conf" ] && . "$HERE/local.conf"
 
 # the order matters: login shell back to bash before fish is removed, logins after the apps
-ORDER=(autostart toshy shortcuts extensions launchers gnome shell tailscale rustdesk wine apps system logins appdata caches)
-ROOT_MODS=" toshy shell tailscale rustdesk wine apps system "
+ORDER=(autostart toshy shortcuts extensions launchers gnome configs shell tailscale rustdesk wine apps system logins appdata caches)
+ROOT_MODS=" toshy configs shell tailscale rustdesk wine apps system "
 
 # personal packages (checked with apt-get -s: removing them takes nothing else with it)
 APPS_PKGS=(zapzap copyq kitty tmux btop eza fd-find ripgrep jq gh stow ydotool dpscreenocr tesseract-ocr tesseract-ocr-eng
@@ -52,11 +52,12 @@ describe() {
         extensions) echo "Your GNOME extensions (Run or Raise, gestures, net speed, VibeTyper, desktop rules, focused-window) + their settings" ;;
         launchers)  echo "Menu-entry overrides (Wayland flags), Chrome web apps, default-app choices" ;;
         gnome)      echo "Every other GNOME setting back to Ubuntu defaults (dconf reset; a backup is saved in logs/)" ;;
+        configs)    echo "Lock screen asks for the password again (after blank + suspend), autologin off, idle/power defaults, every leftover config linked from ~/dotfiles" ;;
         shell)      echo "Login shell back to bash (sssd override), fish/starship/tmux/kitty/nvim/btop configs, fresh .bashrc/.profile" ;;
         tailscale)  echo "Sign out of Tailscale, remove it and its apt repo" ;;
         rustdesk)   echo "Remove RustDesk and its config" ;;
         wine)       echo "Wine (64 + 32-bit), its menu entries, the Wine prefixes (~/.wine*), and the i386 architecture if nothing else uses it" ;;
-        apps)       echo "Every personal package: ZapZap, Telegram, VibeTyper, CopyQ, kitty, tmux, fish, btop, eza, ripgrep, fd, jq, gh, stow, ydotool, OCR, FileZilla, Flatpak, x11vnc, sshfs, Ruby, gedit, Cheese, … + Neovim, starship, FiraCode, PPAs, Toshy build libraries (apt autoremove)" ;;
+        apps)       echo "Every personal package: ZapZap, Telegram, VibeTyper, CopyQ, kitty, tmux, fish, btop, eza, ripgrep, fd, jq, gh, glow, uv, stow, ydotool, OCR, FileZilla, Flatpak, x11vnc, sshfs, Ruby, gedit, Cheese, … + Neovim, starship, FiraCode, PPAs, Toshy build libraries (apt autoremove)" ;;
         system)     echo "System tweaks: inotify watch limit (sysctl), touchpad speed (hwdb)" ;;
         logins)     echo "Sign out + wipe: SSH keys and config, git identity, GitHub (gh), Claude, browser profiles, keyrings, GPG, OneDrive sign-out, app logins" ;;
         appdata)    echo "Personal app data: messages, VS Code/Obsidian/Postman/Compass settings, Wine prefixes, shell history, recent files" ;;
@@ -72,6 +73,7 @@ canon() {
         ext|extension)        echo extensions ;;
         fish|bash|tmux|kitty|nvim|starship) echo shell ;;
         ssh|git|gh|github|claude|browsers|secrets|login) echo logins ;;
+        lock|lockscreen|screensaver|autolock|autologin|config|dotfiles) echo configs ;;
         cache) echo caches ;;
         *) echo "$1" ;;
     esac
@@ -308,6 +310,30 @@ mod_gnome() {
     run user dconf reset -f /
 }
 
+mod_configs() {
+    local k l links=()
+    # lock screen: password after the screen blanks and after suspend; idle and power back to defaults
+    for k in "org.gnome.desktop.screensaver lock-enabled" "org.gnome.desktop.screensaver lock-delay" \
+        "org.gnome.desktop.screensaver ubuntu-lock-on-suspend" "org.gnome.desktop.notifications show-in-lock-screen" \
+        "org.gnome.desktop.session idle-delay"; do
+        as_user gsettings get $k &>/dev/null && run user gsettings reset $k
+    done
+    dconf_reset /org/gnome/settings-daemon/plugins/power/ /org/gnome/desktop/lockdown/
+    # login without a password (GDM autologin), if it was turned on
+    if grep -Eqs '^\s*(AutomaticLoginEnable|TimedLoginEnable)\s*=\s*[Tt]rue' /etc/gdm3/custom.conf; then
+        run root sed -i -E 's/^\s*(AutomaticLoginEnable|TimedLoginEnable)\s*=.*/\1 = false/' /etc/gdm3/custom.conf
+    else
+        log "  autologin is already off"
+    fi
+    # any config still linked into the dotfiles repo
+    while IFS= read -r l; do links+=("$l"); done < <(find "$THOME" -maxdepth 6 \
+        \( -path "$THOME/dotfiles" -o -path "$THOME/WorkSpace" -o -path "$THOME/snap" -o -path "$THOME/.cache" \
+        -o -path "$THOME/.wine*" -o -path "$THOME/.npm" -o -path "$THOME/.nvm" -o -path "$THOME/OneDrive" \
+        -o -path "$THOME/.local/share/containers" \) -prune -o -type l -lname '*dotfiles/*' -print 2>/dev/null)
+    log "  ${#links[@]} config link(s) into ~/dotfiles"
+    remove user "${links[@]}"
+}
+
 mod_shell() {
     # fish was made the login shell with an sssd override (the shell itself comes from AD)
     if [[ "$(login_shell)" == *fish* ]]; then
@@ -358,6 +384,10 @@ mod_apps() {
     for p in "${APPS_AUTO[@]}"; do installed "$p" && echo "$p" >>"$JOBDIR/apt-auto"; done
     log "  queued for apt autoremove (only if nothing else needs them): $(wc -l <"$JOBDIR/apt-auto") build libraries"
     remove user "$THOME/.local/share/flatpak" "$THOME/.var"
+    # glow (Markdown viewer, Snap) and uv (Python tool installer)
+    snap list glow &>/dev/null && run root snap remove --purge glow
+    remove user "$THOME"/.local/bin/{uv,uvx,env,env.fish} "$THOME/.local/share/uv" "$THOME/.config/uv" "$THOME/.cache/uv"
+    remove root /opt/nvim
     remove root /etc/apt/sources.list.d/fish-shell-ubuntu-release-4-*.sources* \
         /etc/apt/sources.list.d/daniel_p-ubuntu-dpscreenocr-*.sources* \
         /usr/local/bin/starship /usr/local/bin/nvim /opt/nvim-linux-x86_64
