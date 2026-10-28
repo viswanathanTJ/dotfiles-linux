@@ -302,6 +302,15 @@ gnome/settings.sh         GNOME settings, Toshy rules apply, resets
 keyboard/                 toshy_user_apps.py (your Toshy rules), sync-toshy-rules.py
 docs/                     keyboard docs, repo-map.html (overview diagrams)
 examples/                 templates for the personal files
+reset/                    reset-to-stock.sh: undo everything before handing a laptop back
+```
+
+## Reset to stock (handing a laptop back)
+
+[`reset/reset-to-stock.sh`](reset/README.md) undoes all of this, plus your personal apps, logins and caches. All parts run in parallel, so it takes minutes. Start with a dry run:
+
+```bash
+reset/reset-to-stock.sh --all --delete -n
 ```
 
 ## Not included (on purpose)

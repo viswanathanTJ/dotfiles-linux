@@ -1,0 +1,12 @@
+# Copy to reset/local.conf (git-ignored) for settings that belong to one machine only.
+# Read by reset/reset-to-stock.sh. Write home paths as "~/..." in quotes.
+
+# What the help lists under NEVER TOUCHED (the software your company or IT installed)
+KEEP_NOTE="VPN client, security agent, device management, domain join, office apps"
+
+# More paths a part deletes: EXTRA_REMOVE_<part>, e.g. logins of work tools
+EXTRA_REMOVE_logins=("~/.config/some-work-tool")
+EXTRA_REMOVE_launchers=("~/.local/share/applications/some-work-tool.desktop")
+
+# More folders --delete asks about
+EXTRA_DELETE=("~/Projects")
