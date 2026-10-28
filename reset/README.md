@@ -72,6 +72,8 @@ The log shows `done: <part>` as each part finishes, then each part's detailed st
 
 ## The parts
 
+**Every app goes together with its settings and data**, in the part that removes the app. So running one part on its own leaves nothing of that app behind. `logins` and `appdata` only clear what belongs to apps that stay installed.
+
 **[sudo]** means the part changes system files.
 
 | Part | What it resets |
@@ -83,16 +85,16 @@ The log shows `done: <part>` as each part finishes, then each part's detailed st
 | `launchers` | Your menu-entry copies (Wayland flags), Chrome web apps, default-app choices |
 | `gnome` | **All** other GNOME settings back to Ubuntu defaults. A backup is saved first as `logs/gnome-settings-<date>.ini` (restore it with `dconf load / < file`). |
 | `configs` [sudo] | The lock screen asks for your password again, after the screen blanks and after suspend. It also turns autologin (login without a password) off if it was on, resets the idle and power settings, and removes any config still linked into `~/dotfiles` |
-| `shell` [sudo] | Login shell back to bash (removes the sssd override), deletes the fish/starship/tmux/kitty/nvim/btop configs, fresh `.bashrc`/`.profile` from `/etc/skel` |
+| `shell` [sudo] | Login shell back to bash (removes the sssd override), fresh `.bashrc`/`.profile`/`.bash_logout` from `/etc/skel` |
 | `tailscale` [sudo] | `tailscale logout`, then removes Tailscale and its apt repo |
 | `rustdesk` [sudo] | Removes RustDesk and its config |
 | `wine` [sudo] | Removes Wine (64- and 32-bit), the `~/.wine*` prefixes and Wine's menu entries, and drops the 32-bit (i386) architecture once no 32-bit package is left |
 | `apps` [sudo] | Removes the personal packages: ZapZap, Telegram, VibeTyper, CopyQ, kitty, tmux, fish, btop, eza, ripgrep, fd, jq, gh, glow, uv, stow, ydotool, OCR, FileZilla, Flatpak, x11vnc, sshfs, adb, 7zip, Ruby, gedit, Cheese and more. Also Neovim, starship, FiraCode fonts and the fish + dpScreenOCR PPAs. The build libraries Toshy installed are marked "automatic", so `apt autoremove` deletes the ones nothing else needs. fish goes only once it's no longer your login shell. |
-| `devstack` [sudo] | MongoDB + Compass, Elasticsearch, Podman (+ the `docker` shim, compose, all containers and images), Go, Obsidian, Postman: packages, apt repos, data in `/var/lib`, configs, and the Podman sub-UID ranges in `/etc/subuid`/`/etc/subgid` |
+| `devstack` [sudo] | MongoDB + Compass, Elasticsearch, Podman (+ the `docker` shim, compose, all containers and images), Go, Obsidian, Postman, Genymotion (+ its virtual devices): packages, apt repos, data in `/var/lib`, configs, and the Podman sub-UID ranges in `/etc/subuid`/`/etc/subgid` |
 | `m365` [sudo] | Teams for Linux, the OneDrive client (signed out first, so the cloud files are safe) and Entra SSO for Chrome: packages, apt repos, configs |
 | `system` [sudo] | Removes the inotify watch-limit tweak and the touchpad hwdb file, then runs `local_system()` from `local.conf` (system files you changed by hand on that machine) |
-| `logins` | Signs out of OneDrive and deletes `~/.ssh` (keys + config), `.gitconfig`, git credentials, GitHub CLI (`gh`), all Claude data (every `~/.claude*` profile, Claude Desktop, state, caches), all Chrome data (profiles, web apps, caches), every other browser profile, GNOME keyrings, GPG, and the logins of Teams, FileZilla, PuTTY, Remmina, TeamViewer, Copilot, Cursor, Genymotion and adb |
-| `appdata` | Telegram/ZapZap messages, VS Code/Obsidian/Postman/Compass settings, shell history, recent files |
+| `logins` | Deletes `~/.ssh` (keys + config), `.gitconfig`, git credentials, all Claude data (every `~/.claude*` profile, Claude Desktop, state, caches), all Chrome data (profiles, web apps, caches), every other browser profile, GNOME keyrings, GPG, and the logins of apps that stay (PuTTY, Remmina, TeamViewer, Copilot, Cursor). It signs out of OneDrive when `m365` isn't run. The GitHub CLI login goes with `gh` in `apps`. |
+| `appdata` | Settings of the apps that stay (VS Code, Evolution), shell history, recent files |
 | `caches` | `~/.cache`, npm, gradle, Trash, core dumps |
 
 Last of all, after apt, the script runs `local_last()` from `local.conf` if there is one. Use it for steps that must come at the very end, such as leaving the `sudo` group.

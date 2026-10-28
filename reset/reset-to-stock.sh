@@ -55,16 +55,16 @@ describe() {
         launchers)  echo "Menu-entry overrides (Wayland flags), Chrome web apps, default-app choices" ;;
         gnome)      echo "Every other GNOME setting back to Ubuntu defaults (dconf reset; a backup is saved in logs/)" ;;
         configs)    echo "Lock screen asks for the password again (after blank + suspend), autologin off, idle/power defaults, every leftover config linked from ~/dotfiles" ;;
-        shell)      echo "Login shell back to bash (sssd override), fish/starship/tmux/kitty/nvim/btop configs, fresh .bashrc/.profile" ;;
+        shell)      echo "Login shell back to bash (sssd override), fresh .bashrc/.profile/.bash_logout" ;;
         tailscale)  echo "Sign out of Tailscale, remove it and its apt repo" ;;
         rustdesk)   echo "Remove RustDesk and its config" ;;
         wine)       echo "Wine (64 + 32-bit), its menu entries, the Wine prefixes (~/.wine*), and the i386 architecture if nothing else uses it" ;;
-        apps)       echo "Every personal package: ZapZap, Telegram, VibeTyper, CopyQ, kitty, tmux, fish, btop, eza, ripgrep, fd, jq, gh, glow, uv, stow, ydotool, OCR, FileZilla, Flatpak, x11vnc, sshfs, Ruby, gedit, Cheese, … + Neovim, starship, FiraCode, PPAs, Toshy build libraries (apt autoremove)" ;;
-        devstack)   echo "MongoDB + Compass, Elasticsearch, Podman (+ docker shim, compose, containers), Go, Obsidian, Postman: packages, repos, data, configs" ;;
+        apps)       echo "Every personal package: ZapZap, Telegram, VibeTyper, CopyQ, kitty, tmux, fish, btop, eza, ripgrep, fd, jq, gh, glow, uv, stow, ydotool, OCR, FileZilla, Flatpak, x11vnc, sshfs, Ruby, gedit, Cheese, … + Neovim, starship, FiraCode, PPAs, Toshy build libraries (apt autoremove). Each app goes with its settings and data" ;;
+        devstack)   echo "MongoDB + Compass, Elasticsearch, Podman (+ docker shim, compose, containers), Go, Obsidian, Postman, Genymotion (+ its virtual devices): packages, repos, data, settings" ;;
         m365)       echo "Teams for Linux, OneDrive client (signed out first), Entra SSO for Chrome: packages, repos, configs" ;;
         system)     echo "System tweaks: inotify watch limit (sysctl), touchpad speed (hwdb), plus local_system() from local.conf" ;;
-        logins)     echo "Sign out + wipe: SSH keys and config, git identity, GitHub (gh), Claude, browser profiles, keyrings, GPG, OneDrive sign-out, app logins" ;;
-        appdata)    echo "Personal app data: messages, VS Code/Obsidian/Postman/Compass settings, Wine prefixes, shell history, recent files" ;;
+        logins)     echo "Sign out + wipe: SSH keys and config, git identity + credentials, Claude, browser profiles, keyrings, GPG, logins of the apps that stay" ;;
+        appdata)    echo "Settings of the apps that stay (VS Code, Evolution), shell history, recent files" ;;
         caches)     echo "Caches and junk: ~/.cache, npm, gradle, Trash, core dumps" ;;
     esac
 }
@@ -75,10 +75,11 @@ canon() {
         keys|keyboard|keymap) echo toshy ;;
         keybindings|hotkeys)  echo shortcuts ;;
         ext|extension)        echo extensions ;;
-        fish|bash|tmux|kitty|nvim|starship) echo shell ;;
+        bash|loginshell) echo shell ;;
+        fish|tmux|kitty|nvim|starship|copyq|vibetyper|zapzap|telegram) echo apps ;;
         ssh|git|gh|github|claude|browsers|secrets|login) echo logins ;;
         lock|lockscreen|screensaver|autolock|autologin|config|dotfiles) echo configs ;;
-        dev|mongo|mongodb|elastic|elasticsearch|podman|docker|go|golang|obsidian|postman) echo devstack ;;
+        dev|mongo|mongodb|elastic|elasticsearch|podman|docker|go|golang|obsidian|postman|genymotion) echo devstack ;;
         microsoft|teams|onedrive|entra|sso) echo m365 ;;
         cache) echo caches ;;
         *) echo "$1" ;;
@@ -302,7 +303,7 @@ mod_launchers() {
     # postman.desktop stays: Postman (kept) has no other menu entry
     remove user "$a"/com.microsoft.VSCode*.desktop "$a/md.obsidian.Obsidian.desktop" "$a/google-chrome.desktop" \
         "$a/teams-for-linux.desktop" "$a"/chrome-*-Default.desktop "$a/mimeapps.list" \
-        "$a/defaults.list" "$THOME/.local/share/applications.bak-genymotion" "$THOME/.config/mimeapps.list"
+        "$a/defaults.list" "$THOME/.config/mimeapps.list"
     [ -d "$a" ] && run user update-desktop-database "$a"
 }
 
@@ -345,10 +346,8 @@ mod_shell() {
     if [[ "$(login_shell)" == *fish* ]]; then
         run root sss_override user-del "$TUSER" && run root systemctl restart sssd && run root sss_cache -E
     fi
-    remove user "$THOME/.config/fish" "$THOME/.config/starship.toml" "$THOME/.tmux.conf" "$THOME/.tmux" \
-        "$THOME/.local/share/tmux" "$THOME/.local/state/tmux-assistant-resurrect" "$THOME/.config/kitty" "$THOME/.config/nvim" "$THOME/.local/share/nvim" \
-        "$THOME/.config/btop" "$THOME/.zshrc" "$THOME"/.local/bin/{tmux-restore,blank-screen,screen-ocr,json_key_swap} \
-        "$THOME/.dotfiles-backup"
+    # the tools' own configs (fish, tmux, kitty, …) go with the tools, in the 'apps' part
+    remove user "$THOME/.zshrc" "$THOME/.dotfiles-backup"
     local f
     for f in .bashrc .profile .bash_logout; do
         run user cp --remove-destination "/etc/skel/$f" "$THOME/$f"
@@ -397,11 +396,19 @@ mod_apps() {
     remove root /etc/apt/sources.list.d/fish-shell-ubuntu-release-4-*.sources* \
         /etc/apt/sources.list.d/daniel_p-ubuntu-dpscreenocr-*.sources* \
         /usr/local/bin/starship /usr/local/bin/nvim /opt/nvim-linux-x86_64
-    remove user "$THOME/.local/opt/Telegram" "$THOME/.local/bin/telegram" \
-        "$THOME"/.local/share/applications/org.telegram.desktop*.desktop "$THOME/Downloads/VibeTyper.AppImage" \
-        "$THOME"/.local/share/applications/com.vibetyper.app.desktop* "$THOME/.config/copyq" "$THOME/.local/share/copyq" \
-        "$THOME/.config/dpscreenocr" "$THOME"/.local/share/fonts/FiraCode* \
-        && run user fc-cache -f
+    local h="$THOME"
+    # every app goes together with its settings and data
+    remove user \
+        "$h/.config/fish" "$h/.local/share/fish" "$h/.config/starship.toml" \
+        "$h/.tmux.conf" "$h/.tmux" "$h/.local/share/tmux" "$h/.local/state/tmux-assistant-resurrect" "$h/.local/bin/tmux-restore" \
+        "$h/.config/kitty" "$h/.config/nvim" "$h/.local/share/nvim" "$h/.local/state/nvim" "$h/.config/btop" "$h/.config/glow" \
+        "$h/.config/copyq" "$h/.local/share/copyq" "$h/.config/dpscreenocr" "$h"/.local/bin/{blank-screen,screen-ocr,json_key_swap} \
+        "$h/.local/opt/Telegram" "$h/.local/bin/telegram" "$h"/.local/share/applications/org.telegram.desktop*.desktop \
+        "$h/.local/share/TelegramDesktop" "$h/.local/share/ZapZap" "$h/.config/ZapZap" \
+        "$h/Downloads/VibeTyper.AppImage" "$h"/.local/share/applications/com.vibetyper.app.desktop* \
+        "$h/.local/share/com.vibetyper.app" "$h/.config/vibe-typer" \
+        "$h/.config/filezilla" "$h/.config/gh" "$h/.android" "$h/.vnc" "$h/.gem" "$h/.local/share/gem"
+    remove user "$h"/.local/share/fonts/FiraCode* && run user fc-cache -f
 }
 
 mod_devstack() {
@@ -414,15 +421,19 @@ mod_devstack() {
         /etc/apt/sources.list.d/elastic-*.list /usr/share/keyrings/elasticsearch-keyring.gpg \
         /var/lib/mongodb /var/log/mongodb /etc/mongod.conf /etc/mongod.conf.bak /etc/systemd/system/mongod.service.d \
         /var/lib/elasticsearch /var/log/elasticsearch /etc/elasticsearch /etc/containers/nodocker \
-        /usr/local/go /opt/Postman /usr/local/bin/postman /opt/Obsidian \
+        /usr/local/go /opt/Postman /usr/local/bin/postman /opt/Obsidian /opt/genymobile \
         && run root systemctl daemon-reload
     # the sub-UID/GID ranges added for rootless Podman
     esc=$(printf '%s' "$TUSER" | sed 's/[][\.*^$/]/\\&/g')
     if grep -qs "^$TUSER:" /etc/subuid /etc/subgid; then
         run root sed -i "/^$esc:/d" /etc/subuid /etc/subgid
     fi
+    as_user pgrep -f genymotion >/dev/null && run user pkill -f genymotion
+    # each app with its settings and data
     remove user "$h/go" "$h/.cache/go-build" "$h/.config/go" "$h/.local/share/containers" "$h/.config/containers" \
-        "$h/.local/share/applications/postman.desktop" "$h/Postman"
+        "$h/.local/share/applications/postman.desktop" "$h/Postman" "$h/.config/Postman" \
+        "$h/.config/obsidian" "$h/.config/MongoDB Compass" "$h/.mongodb" \
+        "$h"/.local/bin/genymotion* "$h/.Genymobile" "$h/.config/Genymobile" "$h/.local/share/applications.bak-genymotion"
 }
 
 mod_m365() {
@@ -456,7 +467,7 @@ mod_logins() {
         run user onedrive --logout
         remove user "$h"/.config/onedrive/items.sqlite3*
     fi
-    remove user "$h/.ssh" "$h/.gitconfig" "$h/.git-credentials" "$h/.config/git" "$h/.config/gh" \
+    remove user "$h/.ssh" "$h/.gitconfig" "$h/.git-credentials" "$h/.config/git" \
         "$h/.claude" "$h"/.claude-* "$h"/.claude.json* "$h/.config/claude-multiprofile" "$h/.config/chrome-claude" \
         "$h/.local/share/claude" "$h/.local/state/claude" "$h/.local/bin/claude" "$h/.config/ccstatusline" "$h/.config/Claude" \
         "$h/.local/share/applications/claude-code-url-handler.desktop" "$h/.cache/claude" "$h/.cache/claude-cli-nodejs" \
@@ -465,21 +476,18 @@ mod_logins() {
         "$h/.config/google-chrome" "$h/.config/google-chrome-headless" "$h/.config/chromium" "$h/.config/BraveSoftware" \
         "$h/.config/vivaldi" "$h/.config/opera" "$h/.config/microsoft-edge" "$h/.mozilla" "$h/snap/firefox" "$h/.pki" \
         "$h/.local/share/keyrings" "$h/.gnupg" "$h/.config/goa-1.0" \
-        $([[ " ${MODS[*]} " == *" m365 "* ]] || printf '%q' "$h/.config/teams-for-linux") \
-        "$h/.config/filezilla" "$h/.putty" "$h/.config/remmina" "$h/.local/share/remmina" "$h/.config/freerdp" \
+        "$h/.putty" "$h/.config/remmina" "$h/.local/share/remmina" "$h/.config/freerdp" \
         "$h/.config/teamviewer" "$h/.local/share/teamviewer15" "$h/.copilot" "$h/.cursor" "$h/.pi" \
-        "$h/.npmrc" "$h/.docker" "$h/.Genymobile" \
-        "$h/.config/Genymobile" "$h/.android" "$h/.redhat" "$h/.config/configstore"
+        "$h/.npmrc" "$h/.docker" "$h/.redhat" "$h/.config/configstore"
 }
 
 mod_appdata() {
     local h="$THOME"
-    remove user "$h/.local/share/TelegramDesktop" "$h/.local/share/ZapZap" "$h/.config/ZapZap" \
-        "$h/.local/share/com.vibetyper.app" "$h/.config/vibe-typer" "$h/.config/Code" "$h/.vscode" "$h/.vscode-shared" \
-        "$h/.config/obsidian" "$h/.config/Postman" "$h/.config/MongoDB Compass" "$h/.mongodb" \
+    # settings of the apps that stay (removed apps take theirs with them in their own part)
+    remove user "$h/.config/Code" "$h/.vscode" "$h/.vscode-shared" \
         "$h/.config/evolution" "$h/.local/share/evolution" \
         "$h/.local/share/onedriver" "$h/.local/bin/codebase-memory-mcp" \
-        "$h/.bash_history" "$h/.zsh_history" "$h/.local/share/fish" "$h/.lesshst" "$h/.wget-hsts" \
+        "$h/.bash_history" "$h/.zsh_history" "$h/.lesshst" "$h/.wget-hsts" \
         "$h/.python_history" "$h/.node_repl_history" "$h/.local/share/recently-used.xbel"
 }
 
