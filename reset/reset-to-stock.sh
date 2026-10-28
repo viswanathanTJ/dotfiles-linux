@@ -537,7 +537,8 @@ wipe() {
 delete_queue_run() {
     local p n=${#DEL_QUEUE[@]} t0=$SECONDS
     ((n)) || { log "  nothing chosen to delete"; return 0; }
-    for p in "${DEL_QUEUE[@]}"; do [ "$p" = "$THOME/OneDrive" ] && onedrive_unlink; done
+    # sign OneDrive out before deleting anything: a sync that sees local files gone would delete the cloud copies
+    onedrive_unlink
     log "== deleting $n item(s) in parallel"
     for p in "${DEL_QUEUE[@]}"; do
         if ((DRY)); then wipe "$p"; else wipe "$p" & fi
