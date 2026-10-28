@@ -9,7 +9,7 @@ STOW="$HERE/stow"
 DRY=0
 ACTION=""
 NAMES=()
-PARTS=(packages shell git tmux nvim kitty vscode copyq tools podman keyboard desktops lock teams)
+PARTS=(packages shell git tmux nvim kitty vscode copyq tools podman keyboard desktops lock teams memory)
 
 describe() {
     case "$1" in
@@ -21,12 +21,13 @@ describe() {
         kitty)    echo "kitty terminal (splits, fonts, shortcuts)" ;;
         vscode)   echo "VS Code settings.json + keybindings.json" ;;
         copyq)    echo "CopyQ: start at login through XWayland so it sees the clipboard on Wayland; Enter pastes (through ydotool)" ;;
-        tools)    echo "Screen OCR and blank-screen scripts; btop sorted by memory" ;;
+        tools)    echo "Screen OCR and blank-screen scripts; btop sorted by memory; Claude Code status line (ccstatusline, every ~/.claude* profile)" ;;
         podman)   echo "docker -> podman fish wrapper" ;;
         keyboard) echo "Mac-style keys: Toshy rules + preferences, GNOME shortcuts, Run or Raise (checks its prerequisites first: extensions running, Toshy installed)" ;;
         desktops) echo "4 fixed desktops, Alt+Caps+1..4, touchpad: 3-finger app switcher, 4-finger desktops (Wayland)" ;;
         lock)     echo "No password after screen blank or suspend; autolock / autologin commands" ;;
         teams)    echo "Teams for Linux: menu bar hidden (fixes Win+Backspace word delete)" ;;
+        memory)   echo "Stop out-of-memory freezes: earlyoom (sudo) kills Gradle/emulators first; memory caps for Gradle builds" ;;
     esac
 }
 
@@ -37,11 +38,12 @@ canon() {
         toshy|keys|keymap|shortcuts) echo keyboard ;;
         vim|neovim) echo nvim ;;
         fish|bash|starship|zsh) echo shell ;;
-        btop|ocr|bin) echo tools ;;
+        btop|ocr|bin|ccstatusline|statusline) echo tools ;;
         docker) echo podman ;;
         workspaces|desktop|apps) echo desktops ;;
         screensaver|autolock) echo lock ;;
         teams-for-linux) echo teams ;;
+        oom|earlyoom|ram|gradle) echo memory ;;
         *) echo "$1" ;;
     esac
 }
@@ -270,6 +272,72 @@ adopt_part() {   # copy this machine's real files into the repo first
     say "Adopted $n file(s) of $p from this machine into the repo (see: git diff)"
 }
 
+# Claude Code status line: install ccstatusline (its settings are linked by tools) and add the
+# statusLine block to ~/.claude/settings.json and every profile's (~/.claude-*/settings.json)
+claude_statusline() {
+    local s d
+    if ! have ccstatusline; then
+        if have npm; then
+            say "Installing ccstatusline (Claude Code status line)"
+            run "npm install -g ccstatusline@2.2.32 >/dev/null"
+        else
+            echo "    ccstatusline needs npm (Node.js): npm install -g ccstatusline"
+        fi
+    fi
+    if ! have jq; then echo "    jq not found: skipping the Claude Code statusLine setting"; return; fi
+    for d in "$HOME/.claude" "$HOME"/.claude-*/; do
+        d=${d%/}; s="$d/settings.json"
+        [ -d "$d" ] || continue
+        [ -f "$s" ] || run "printf '{}\\n' > \"$s\""
+        if [ ! -f "$s" ] || [ "$(jq -r '.statusLine.command // empty' "$s")" != ccstatusline ]; then
+            say "Claude Code status line -> ${s/#$HOME/~}"
+            run "cp -a \"$s\" \"$s.bak-statusline\" && jq '.statusLine = {\"type\": \"command\", \"command\": \"ccstatusline\", \"padding\": 0, \"refreshInterval\": 10}' \"$s.bak-statusline\" > \"$s\""
+        fi
+    done
+}
+
+# Out-of-memory protection: earlyoom (system service, sudo) and memory caps in ~/.gradle/gradle.properties
+memory_setup() {
+    local want_args cur f="$HOME/.gradle/gradle.properties" k line
+    if ! have earlyoom; then
+        say "Installing earlyoom (asks for your password)"
+        case "$(pkg_mgr)" in
+            apt) run "sudo apt-get install -y earlyoom" ;;
+            dnf) run "sudo dnf install -y earlyoom" ;;
+            *)   echo "    No apt or dnf: install earlyoom by hand, then ./setup.sh memory"; return ;;
+        esac
+    fi
+    want_args=$(grep '^EARLYOOM_ARGS=' "$HERE/memory/earlyoom")
+    cur=$(grep '^EARLYOOM_ARGS=' /etc/default/earlyoom 2>/dev/null || true)
+    if [ "$cur" != "$want_args" ]; then
+        say "earlyoom settings -> /etc/default/earlyoom (asks for your password)"
+        run "sudo cp \"$HERE/memory/earlyoom\" /etc/default/earlyoom && sudo systemctl enable earlyoom && sudo systemctl restart earlyoom"
+    elif ! systemctl is-enabled -q earlyoom 2>/dev/null || ! systemctl is-active -q earlyoom; then
+        say "Starting earlyoom (asks for your password)"
+        run "sudo systemctl enable --now earlyoom"
+    else
+        echo "    earlyoom: running with the repo settings"
+    fi
+    # Gradle: only our keys are set; anything else in the file (signing keys, tokens) stays as it is
+    if [ ! -f "$f" ]; then
+        say "Gradle memory caps -> ~/.gradle/gradle.properties"
+        run "mkdir -p \"$HOME/.gradle\" && cp \"$HERE/memory/gradle.properties\" \"$f\""
+        return
+    fi
+    while IFS= read -r line; do
+        case "$line" in ''|'#'*) continue ;; esac
+        k=${line%%=*}
+        if ! grep -qxF "$line" "$f"; then
+            say "Gradle: $line"
+            if grep -q "^$k=" "$f"; then
+                run "cp -a \"$f\" \"$f.bak-memory\" && sed -i 's|^$k=.*|$line|' \"$f\""
+            else
+                run "printf '%s\\n' '$line' >> \"$f\""
+            fi
+        fi
+    done < "$HERE/memory/gradle.properties"
+}
+
 apply_extras() {   # $1 = part: the non-file steps
     case "$1" in
         shell)
@@ -314,7 +382,8 @@ apply_extras() {   # $1 = part: the non-file steps
             else
                 say "btop: sort processes by memory"
                 run "mkdir -p \"$HOME/.config/btop\" && printf 'proc_sorting = \"memory\"\\n' > \"$btop\""
-            fi ;;
+            fi
+            claude_statusline ;;
         copyq)
             # CopyQ settings changed from its defaults: start at login through XWayland,
             # so it can see clipboard changes on Wayland (also enables autostart)
@@ -384,6 +453,7 @@ PY"
         desktops) if have gsettings; then gnome_desktops; fi ;;
         lock)     if have gsettings; then gnome_lock; fi ;;
         teams)    teams_settings ;;
+        memory)   memory_setup ;;
     esac
 }
 
@@ -391,6 +461,7 @@ reset_part() {   # $1 = part: config files out (backed up), settings back to def
     local p=$1 f n=0
     if [ "$p" = packages ]; then echo "    'packages' has nothing to reset (remove programs with apt/dnf)"; return; fi
     if [ "$p" = git ]; then echo "    'git': your ~/.gitconfig is personal and is left alone"; return; fi
+    if [ "$p" = memory ]; then echo "    'memory': to stop earlyoom: sudo systemctl disable --now earlyoom; Gradle caps: edit ~/.gradle/gradle.properties"; return; fi
     while IFS= read -r f; do
         if is_our_link "$f" "$p"; then
             run "rm \"$HOME/$f\""; n=$((n + 1))   # just our link: the content is safe in the repo

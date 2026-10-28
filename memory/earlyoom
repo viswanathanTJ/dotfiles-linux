@@ -1,0 +1,10 @@
+# earlyoom settings, copied to /etc/default/earlyoom by ./setup.sh memory.
+# Several Claude sessions building Android projects at once filled 32 GB and froze the PC (2026-10-25);
+# earlyoom ends the biggest process early instead.
+#   -M 2097152   act when free RAM drops below 2 GB (value in KiB; -m would be a percentage)
+#   -s 10        ...and free swap is below 10% (-S would be KiB)
+#   -r 0         no periodic memory report in the log
+#   --prefer     Gradle / Kotlin (java) and Android emulators (qemu) are killed first
+#   --avoid      the desktop, terminal, tmux, Claude Code and audio are spared
+# Check: journalctl -u earlyoom -n 20   (first line shows the limits in use)
+EARLYOOM_ARGS="-M 2097152 -s 10 -r 0 --prefer ^(java|qemu-system-x86)$ --avoid ^(gnome-shell|Xwayland|kitty|tmux|claude|pipewire)$"

@@ -194,6 +194,33 @@ Gestures need a **Wayland** session: on the login screen, choose **Ubuntu** with
 
 The app-to-desktop extension (`desktop-rules@local`: Teams 1, Brave 2, kitty + VS Code 3, others 4) is turned on by `./setup.sh desktops` (log out and in to load it). It crashed GNOME 46 once; it now moves windows from an idle callback. If it ever logs you out: `gnome-extensions disable desktop-rules@local`.
 
+## Memory (out-of-memory freezes)
+
+On 2026-10-25 several Claude sessions building Android projects at once filled all 32 GB of RAM and the swap, and the PC froze until a hard reset. `./setup.sh memory` sets up two things against that:
+
+**earlyoom** watches free memory and ends one process early, before the system locks up. Settings (`memory/earlyoom` → `/etc/default/earlyoom`):
+
+| Option | Meaning |
+|---|---|
+| `-M 2097152` | Act when free RAM is below 2 GB (KiB; `-m` would be a percentage) |
+| `-s 10` | …and free swap is below 10% (`-S` would be KiB) |
+| `--prefer ^(java\|qemu-system-x86)$` | Gradle / Kotlin build processes and Android emulators go first |
+| `--avoid ^(gnome-shell\|Xwayland\|kitty\|tmux\|claude\|pipewire)$` | The desktop, terminal, tmux, Claude Code and audio are spared |
+
+**Gradle caps** (`memory/gradle.properties` → `~/.gradle/gradle.properties`, which overrides each project's file): build process 3 GB heap, Kotlin compiler 1.5 GB, idle build processes exit after 10 minutes instead of 3 hours, at most 4 parallel tasks.
+
+Limits of the caps: a build started with `-Dorg.gradle.jvmargs=…` on the command line uses that instead, and every git worktree builds in its own Gradle process, so three worktrees built at once are three processes. When Claude runs builds in worktrees, ask it to build one at a time and run `./gradlew --stop` afterwards.
+
+| Check | Command |
+|---|---|
+| earlyoom running, limits in use | `systemctl status earlyoom`, `journalctl -u earlyoom -n 20` |
+| What it killed | `journalctl -u earlyoom \| grep -i sending` |
+| RAM and swap | `free -h`, `swapon --show` |
+| Biggest processes | `btop` (sorted by memory), or `ps -eo rss,comm --sort=-rss \| head` |
+| Gradle / Kotlin processes | `jps -l` or `pgrep -af 'GradleDaemon\|KotlinCompileDaemon'`; stop them with `./gradlew --stop` / `pkill -f KotlinCompileDaemon` |
+
+On Ubuntu, systemd-oomd also runs by default; earlyoom acts first at these limits, and the two don't conflict.
+
 ## If something breaks
 
 | Problem | Fix |
@@ -234,12 +261,13 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `kitty` | `kitty.conf` | — |
 | `vscode` | `settings.json`, `keybindings.json` | — |
 | `copyq` | `copyq/ydotoold.service`, `copyq/paste-ydotool.js` (copied, not linked) | Autostart entry that runs CopyQ through XWayland, so it sees the clipboard on Wayland. Enter pastes: CopyQ presses Ctrl+V (Ctrl+Shift+V in terminals) through ydotool's virtual keyboard, because GNOME answers CopyQ's own fake keys with a Remote Desktop prompt. Needs the `ydotool` package and the `input` group; installs the `ydotoold` user service and tells Toshy to ignore its keyboard |
-| `tools` | `screen-ocr`, `blank-screen`, ccstatusline `settings.json` (Claude Code status line: model, context, git, short folder path / usage, reset timer, signed-in email; needs `npm install -g ccstatusline` and `"statusLine": {"type": "command", "command": "ccstatusline"}` in `~/.claude/settings.json`) | btop: `proc_sorting = "memory"` (the one btop setting changed) |
+| `tools` | `screen-ocr`, `blank-screen`, ccstatusline `settings.json` (Claude Code status line: model, context, git, short folder path / usage, reset timer, signed-in email; setup guide: [docs/ccstatusline.md](docs/ccstatusline.md), Claude Code snippet: `examples/claude-statusLine.json`) | btop: `proc_sorting = "memory"` (the one btop setting changed). Installs ccstatusline 2.2.32 with npm and sets `"statusLine": {"type": "command", "command": "ccstatusline"}` in `~/.claude/settings.json` and every `~/.claude-*/settings.json` profile (old file kept as `settings.json.bak-statusline`) |
 | `podman` | fish `docker` → podman wrapper | Docker Hub short names |
 | `keyboard` | fish `reload-shortcuts` | Run or Raise `shortcuts.conf` (built by `reload-shortcuts` from `keyboard/run-or-raise-shortcuts.conf` + this machine's `shortcuts.local.conf`), GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
 | `desktops` | `desktop-rules@local` extension (Teams 1, Brave 2, kitty + VS Code 3, others 4) | 4 fixed desktops, Super+Alt+1…4 (Left Ctrl+1…4, Caps+1…4 and Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |
 | `lock` | fish `autolock`, `autologin` | No password after screen blank or suspend |
 | `teams` | — | Teams for Linux `"menubar": "hidden"` |
+| `memory` | `memory/earlyoom`, `memory/gradle.properties` (copied, not linked) | earlyoom installed, `/etc/default/earlyoom` written and the service enabled (sudo); Gradle memory caps set in `~/.gradle/gradle.properties` (only those keys; the rest of the file is left alone). See [Memory](#memory-out-of-memory-freezes) |
 
 ## Daily use
 
