@@ -11,8 +11,8 @@ Configs for fish, tmux, Neovim, kitty, VS Code, CopyQ, Mac-style keys (Toshy) an
 
 | Branch | What | Used on |
 |---|---|---|
-| `main` | Shared core: fish, starship, tmux, Neovim, kitty, VS Code, podman, lock, Teams, shared scripts | — (base of the others) |
-| `fedora` | Core + personal: Toshy / Run or Raise / GNOME shortcuts, desktop-rules extension, CopyQ + ydotool, jbl, notif-clear | Fedora desktop |
+| `main` | Shared core: fish, starship, tmux, Neovim, kitty, VS Code, CopyQ + ydotool paste, podman, lock, Teams, shared scripts | — (base of the others) |
+| `fedora` | Core + personal: Toshy / Run or Raise / GNOME shortcuts, desktop-rules extension, jbl, notif-clear | Fedora desktop |
 | `ubuntu` | Core + that machine's prompt logo and Claude profiles | Ubuntu laptop |
 
 Check out your machine's branch. Change shared things on `main`, then bring them in: `git switch fedora && git merge main` (same for `ubuntu`). Machine-only changes are committed straight on the machine branch. `./setup.sh` skips parts whose files aren't on the current branch.
@@ -234,7 +234,7 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `kitty` | `kitty.conf` | — |
 | `vscode` | `settings.json`, `keybindings.json` | — |
 | `copyq` | `copyq/ydotoold.service`, `copyq/paste-ydotool.js` (copied, not linked) | Autostart entry that runs CopyQ through XWayland, so it sees the clipboard on Wayland. Enter pastes: CopyQ presses Ctrl+V (Ctrl+Shift+V in terminals) through ydotool's virtual keyboard, because GNOME answers CopyQ's own fake keys with a Remote Desktop prompt. Needs the `ydotool` package and the `input` group; installs the `ydotoold` user service and tells Toshy to ignore its keyboard |
-| `tools` | `screen-ocr`, `blank-screen` | btop: `proc_sorting = "memory"` (the one btop setting changed) |
+| `tools` | `screen-ocr`, `blank-screen`, ccstatusline `settings.json` (Claude Code status line: model, context, git, short folder path / usage, reset timer, signed-in email; from the ubuntu machine's setup) | btop: `proc_sorting = "memory"` (the one btop setting changed). Installs ccstatusline 2.2.32 with npm and sets `"statusLine": {"type": "command", "command": "ccstatusline"}` in `~/.claude/settings.json` and every `~/.claude-*/settings.json` profile (old file kept as `settings.json.bak-statusline`) |
 | `podman` | fish `docker` → podman wrapper | Docker Hub short names |
 | `keyboard` | Run or Raise `shortcuts.conf`, fish `reload-shortcuts` | GNOME shortcuts and extensions (`gnome/settings.sh`), Toshy rules from `keyboard/toshy_user_apps.py`, Toshy preferences, file-watch limit (sudo) |
 | `desktops` | `desktop-rules@local` extension (Teams 1, Brave 2, kitty + VS Code 3, others 4) | 4 fixed desktops, Super+Alt+1…4 (Left Ctrl+1…4, Caps+1…4 and Alt+Caps+1…4 via Toshy); touchpad gestures extension: 3-finger left/right = app switcher, 4-finger left/right = desktops |

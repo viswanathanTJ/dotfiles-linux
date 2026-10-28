@@ -21,7 +21,7 @@ describe() {
         kitty)    echo "kitty terminal (splits, fonts, shortcuts)" ;;
         vscode)   echo "VS Code settings.json + keybindings.json" ;;
         copyq)    echo "CopyQ: start at login through XWayland so it sees the clipboard on Wayland; Enter pastes (through ydotool)" ;;
-        tools)    echo "Screen OCR and blank-screen scripts; btop sorted by memory" ;;
+        tools)    echo "Screen OCR and blank-screen scripts; btop sorted by memory; Claude Code status line (ccstatusline, every ~/.claude* profile)" ;;
         podman)   echo "docker -> podman fish wrapper" ;;
         keyboard) echo "Mac-style keys: Toshy rules + preferences, GNOME shortcuts, Run or Raise (checks its prerequisites first: extensions running, Toshy installed)" ;;
         desktops) echo "4 fixed desktops, Alt+Caps+1..4, touchpad: 3-finger app switcher, 4-finger desktops (Wayland)" ;;
@@ -37,7 +37,7 @@ canon() {
         toshy|keys|keymap|shortcuts) echo keyboard ;;
         vim|neovim) echo nvim ;;
         fish|bash|starship|zsh) echo shell ;;
-        btop|ocr|bin) echo tools ;;
+        btop|ocr|bin|ccstatusline|statusline) echo tools ;;
         docker) echo podman ;;
         workspaces|desktop|apps) echo desktops ;;
         screensaver|autolock) echo lock ;;
@@ -270,6 +270,30 @@ adopt_part() {   # copy this machine's real files into the repo first
     say "Adopted $n file(s) of $p from this machine into the repo (see: git diff)"
 }
 
+# Claude Code status line: install ccstatusline (its settings are linked by tools) and add the
+# statusLine block to ~/.claude/settings.json and every profile's (~/.claude-*/settings.json)
+claude_statusline() {
+    local s d
+    if ! have ccstatusline; then
+        if have npm; then
+            say "Installing ccstatusline (Claude Code status line)"
+            run "npm install -g ccstatusline@2.2.32 >/dev/null"
+        else
+            echo "    ccstatusline needs npm (Node.js): npm install -g ccstatusline"
+        fi
+    fi
+    if ! have jq; then echo "    jq not found: skipping the Claude Code statusLine setting"; return; fi
+    for d in "$HOME/.claude" "$HOME"/.claude-*/; do
+        d=${d%/}; s="$d/settings.json"
+        [ -d "$d" ] || continue
+        [ -f "$s" ] || run "printf '{}\\n' > \"$s\""
+        if [ ! -f "$s" ] || [ "$(jq -r '.statusLine.command // empty' "$s")" != ccstatusline ]; then
+            say "Claude Code status line -> ${s/#$HOME/~}"
+            run "cp -a \"$s\" \"$s.bak-statusline\" && jq '.statusLine = {\"type\": \"command\", \"command\": \"ccstatusline\", \"padding\": 0, \"refreshInterval\": 10}' \"$s.bak-statusline\" > \"$s\""
+        fi
+    done
+}
+
 apply_extras() {   # $1 = part: the non-file steps
     case "$1" in
         shell)
@@ -314,7 +338,8 @@ apply_extras() {   # $1 = part: the non-file steps
             else
                 say "btop: sort processes by memory"
                 run "mkdir -p \"$HOME/.config/btop\" && printf 'proc_sorting = \"memory\"\\n' > \"$btop\""
-            fi ;;
+            fi
+            claude_statusline ;;
         copyq)
             # CopyQ settings changed from its defaults: start at login through XWayland,
             # so it can see clipboard changes on Wayland (also enables autostart)
