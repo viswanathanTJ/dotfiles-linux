@@ -182,6 +182,20 @@ keymap("User dock apps", {
     not ctx_app_is_remote
 )
 
+keymap("User Caps arrows in terminals", {
+    # Caps+H/J/K/L = arrow keys in terminals too, so Caps+H moves left instead of erasing
+    # (terminals read Ctrl+H as Backspace). Not Caps+A/F: Caps+A is the tmux prefix.
+    # Lost in terminals: Ctrl+L clear screen (type `clear`), Ctrl+K delete to end of line,
+    # Ctrl+J newline (Enter), and Neovim's Ctrl+H/J/K/L window moves.
+    C("LC-h"):                  C("Left"),
+    C("LC-j"):                  C("Down"),
+    C("LC-k"):                  C("Up"),
+    C("LC-l"):                  C("Right"),
+}, when = lambda ctx:
+    cnfg.screen_has_focus and
+    ctx_app_is_terminal
+)
+
 keymap("User Caps vim arrows", {
     # Caps (held = real Ctrl) + H/J/K/L = arrow keys, like a vim-style Mac setup.
     # Apps only: in terminals Ctrl+H/J/K/L stay real Ctrl (backspace, newline, Neovim window moves).
