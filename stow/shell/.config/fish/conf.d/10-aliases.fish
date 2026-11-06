@@ -23,6 +23,7 @@ function h; history; end
 function co; claude --model opus; end
 function cr; claude --resume; end
 function ccr; cd ~/claude; and claude --resume $argv; end
+function cmpe; claude-multiprofile $argv; end
 
 # Git functions
 function g; git $argv; end
