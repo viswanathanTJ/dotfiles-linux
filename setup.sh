@@ -9,7 +9,7 @@ STOW="$HERE/stow"
 DRY=0
 ACTION=""
 NAMES=()
-PARTS=(packages shell git tmux nvim kitty vscode copyq tools podman keyboard desktops lock teams memory)
+PARTS=(packages shell git tmux nvim kitty vscode copyq tools podman keyboard desktops lock teams memory idle)
 
 describe() {
     case "$1" in
@@ -28,6 +28,7 @@ describe() {
         lock)     echo "No password after screen blank or suspend; autolock / autologin commands" ;;
         teams)    echo "Teams for Linux: menu bar hidden (fixes Win+Backspace word delete)" ;;
         memory)   echo "Stop out-of-memory freezes: earlyoom (sudo) kills Gradle/emulators first; memory caps for Gradle builds" ;;
+        idle)     echo "Power off after 1 hour with no desktop or SSH activity (sudo; warns 5 min before; not while busy or a video plays)" ;;
     esac
 }
 
@@ -44,6 +45,7 @@ canon() {
         screensaver|autolock) echo lock ;;
         teams-for-linux) echo teams ;;
         oom|earlyoom|ram|gradle) echo memory ;;
+        shutdown|idle-shutdown|autoshutdown|power) echo idle ;;
         *) echo "$1" ;;
     esac
 }
@@ -338,6 +340,25 @@ memory_setup() {
     done < "$HERE/memory/gradle.properties"
 }
 
+# Idle shutdown: /usr/local/bin/idle-shutdown + a systemd timer that runs it every 5 minutes (sudo)
+idle_setup() {
+    local f changed=0
+    if ! have systemctl || ! have loginctl; then echo "    No systemd: idle shutdown skipped"; return; fi
+    cmp -s "$HERE/power/idle-shutdown" /usr/local/bin/idle-shutdown || changed=1
+    for f in idle-shutdown.service idle-shutdown.timer; do
+        cmp -s "$HERE/power/$f" "/etc/systemd/system/$f" || changed=1
+    done
+    if [ "$changed" = 1 ]; then
+        say "Idle shutdown -> /usr/local/bin + /etc/systemd/system (asks for your password)"
+        run "sudo install -m 755 \"$HERE/power/idle-shutdown\" /usr/local/bin/idle-shutdown && sudo install -m 644 \"$HERE/power/idle-shutdown.service\" \"$HERE/power/idle-shutdown.timer\" /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now idle-shutdown.timer"
+    elif ! systemctl is-enabled -q idle-shutdown.timer 2>/dev/null || ! systemctl is-active -q idle-shutdown.timer; then
+        say "Starting the idle shutdown timer (asks for your password)"
+        run "sudo systemctl enable --now idle-shutdown.timer"
+    else
+        echo "    idle shutdown: installed and running (log: journalctl -u idle-shutdown)"
+    fi
+}
+
 apply_extras() {   # $1 = part: the non-file steps
     case "$1" in
         shell)
@@ -454,6 +475,7 @@ PY"
         lock)     if have gsettings; then gnome_lock; fi ;;
         teams)    teams_settings ;;
         memory)   memory_setup ;;
+        idle)     idle_setup ;;
     esac
 }
 
@@ -462,6 +484,7 @@ reset_part() {   # $1 = part: config files out (backed up), settings back to def
     if [ "$p" = packages ]; then echo "    'packages' has nothing to reset (remove programs with apt/dnf)"; return; fi
     if [ "$p" = git ]; then echo "    'git': your ~/.gitconfig is personal and is left alone"; return; fi
     if [ "$p" = memory ]; then echo "    'memory': to stop earlyoom: sudo systemctl disable --now earlyoom; Gradle caps: edit ~/.gradle/gradle.properties"; return; fi
+    if [ "$p" = idle ]; then echo "    'idle': to stop it: sudo systemctl disable --now idle-shutdown.timer"; return; fi
     while IFS= read -r f; do
         if is_our_link "$f" "$p"; then
             run "rm \"$HOME/$f\""; n=$((n + 1))   # just our link: the content is safe in the repo

@@ -223,6 +223,26 @@ Limits of the caps: a build started with `-Dorg.gradle.jvmargs=…` on the comma
 
 On Ubuntu, systemd-oomd also runs by default; earlyoom acts first at these limits, and the two don't conflict.
 
+## Idle shutdown
+
+`./setup.sh idle` powers the PC off after **1 hour with no activity**. GNOME can only suspend on idle and doesn't see SSH, so a small script (`power/idle-shutdown`, installed to `/usr/local/bin`) runs every 5 minutes from a systemd timer.
+
+| Keeps the PC on | How it's seen |
+|---|---|
+| Keyboard / mouse on the desktop (also RustDesk) | GNOME's idle monitor |
+| Typing in an SSH terminal (also tmux over SSH) | last keystroke time of each SSH terminal |
+| scp / rsync / VS Code over SSH | an SSH session without a terminal |
+| A video playing or a call | something is blocking the screen from going idle |
+| A build or download | 5-minute load average above 3 |
+
+At 55 minutes idle it shows a desktop notification and a message in every terminal; press a key or move the mouse to cancel. At 60 minutes it powers off. Change the times at the top of the script (`IDLE_MIN`, `WARN_MIN`, `BUSY_LOAD`), then run `./setup.sh idle` again.
+
+| | Command |
+|---|---|
+| What it decided | `journalctl -u idle-shutdown -n 20` |
+| Turn off | `sudo systemctl disable --now idle-shutdown.timer` |
+| Turn on again | `sudo systemctl enable --now idle-shutdown.timer` |
+
 ## If something breaks
 
 | Problem | Fix |
@@ -270,6 +290,7 @@ Apps can be comma-separated (`kitty,tmux`). Other names work: `code` = vscode, `
 | `lock` | fish `autolock`, `autologin` | No password after screen blank or suspend |
 | `teams` | — | Teams for Linux `"menubar": "hidden"` |
 | `memory` | `memory/earlyoom`, `memory/gradle.properties` (copied, not linked) | earlyoom installed, `/etc/default/earlyoom` written and the service enabled (sudo); Gradle memory caps set in `~/.gradle/gradle.properties` (only those keys; the rest of the file is left alone). See [Memory](#memory-out-of-memory-freezes) |
+| `idle` | `power/idle-shutdown`, `power/idle-shutdown.{service,timer}` (copied, not linked) | Installed to `/usr/local/bin` and `/etc/systemd/system`, timer enabled (sudo): power off after 1 hour with no desktop or SSH activity. See [Idle shutdown](#idle-shutdown) |
 
 ## Daily use
 

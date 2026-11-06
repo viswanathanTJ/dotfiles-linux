@@ -1,0 +1,90 @@
+#!/bin/bash
+# Idle shutdown: power off after IDLE_MIN minutes with no activity.
+# Runs as root every 5 minutes from idle-shutdown.timer. Installed by ./setup.sh idle.
+#
+# Counts as activity (any one keeps the PC on):
+#   - keyboard / mouse on the desktop (also RustDesk input), from GNOME's idle monitor
+#   - typing in any SSH terminal (also tmux over SSH): last input time of each SSH tty
+#   - an SSH session with no terminal (scp, rsync, VS Code server)
+#   - something blocking the screen from going idle (video playing, a call)
+#   - a busy machine: 5-minute load average above BUSY_LOAD (builds, downloads)
+# WARN_MIN minutes idle: desktop notification + message in every terminal, then power off
+# at IDLE_MIN. Log: journalctl -u idle-shutdown
+# Turn off: sudo systemctl disable --now idle-shutdown.timer
+
+IDLE_MIN=60
+WARN_MIN=55
+BUSY_LOAD=3
+STATE=/run/idle-shutdown   # tmpfs: cleared on every boot
+
+now=$(date +%s)
+mkdir -p "$STATE"
+
+uptime_s=$(cut -d. -f1 /proc/uptime)
+idle=$uptime_s            # no desktop session: count from boot
+dbus_user="" dbus_addr=""
+
+# Desktop idle time (GNOME / Mutter) for the active graphical session
+for s in $(loginctl list-sessions --no-legend | awk '{print $1}'); do
+    eval "$(loginctl show-session "$s" -p Type -p Remote -p State -p Name -p TTY -p User | sed 's/^\([A-Za-z]*\)=\(.*\)$/s_\1="\2"/')"
+    if [ "$s_Remote" = no ] && { [ "$s_Type" = wayland ] || [ "$s_Type" = x11 ]; } && [ "$s_State" = active ]; then
+        dbus_user=$s_Name
+        dbus_addr="unix:path=/run/user/$s_User/bus"
+        ms=$(runuser -u "$dbus_user" -- env DBUS_SESSION_BUS_ADDRESS="$dbus_addr" \
+             gdbus call --session --dest org.gnome.Mutter.IdleMonitor \
+             --object-path /org/gnome/Mutter/IdleMonitor/Core \
+             --method org.gnome.Mutter.IdleMonitor.GetIdletime 2>/dev/null | grep -o '[0-9]\+' | tail -1)
+        if [ -n "$ms" ]; then idle=$((ms / 1000)); fi
+    fi
+    if [ "$s_Remote" = yes ]; then
+        if [ -z "$s_TTY" ] || [ ! -e "/dev/$s_TTY" ]; then
+            idle=0                                   # scp / rsync / VS Code: active
+        else
+            t=$(stat -c %X "/dev/$s_TTY")            # last keystroke in that terminal
+            [ $((now - t)) -lt "$idle" ] && idle=$((now - t))
+        fi
+    fi
+done
+
+# Busy or blocked: remember the time, idle is counted from then
+busy=""
+load5=$(awk '{print $2}' /proc/loadavg)
+if awk -v l="$load5" -v m="$BUSY_LOAD" 'BEGIN{exit !(l > m)}'; then busy="load $load5"; fi
+if [ -n "$dbus_user" ] && runuser -u "$dbus_user" -- env DBUS_SESSION_BUS_ADDRESS="$dbus_addr" \
+     gdbus call --session --dest org.gnome.SessionManager --object-path /org/gnome/SessionManager \
+     --method org.gnome.SessionManager.IsInhibited 8 2>/dev/null | grep -q true; then
+    busy="${busy:+$busy, }idle blocked (video/call)"
+fi
+if [ -n "$busy" ]; then echo "$now" > "$STATE/last-busy"; fi
+if [ -f "$STATE/last-busy" ]; then
+    since_busy=$((now - $(cat "$STATE/last-busy")))
+    [ "$since_busy" -lt "$idle" ] && idle=$since_busy
+fi
+
+mins=$((idle / 60))
+echo "idle ${mins} min${busy:+ (busy: $busy)}"
+
+if [ "$mins" -lt "$WARN_MIN" ]; then
+    rm -f "$STATE/warned"
+    exit 0
+fi
+
+# Always warn at least once before powering off
+if [ "$mins" -lt "$IDLE_MIN" ] || [ ! -f "$STATE/warned" ]; then
+    if [ ! -f "$STATE/warned" ]; then
+        msg="Idle for $mins min: shutting down in about 5 minutes. Press any key or move the mouse to cancel."
+        echo "warning: $msg"
+        wall "$msg" 2>/dev/null
+        if [ -n "$dbus_user" ]; then
+            runuser -u "$dbus_user" -- env DBUS_SESSION_BUS_ADDRESS="$dbus_addr" \
+                notify-send -u critical -a "Idle shutdown" "Shutting down in 5 minutes" \
+                "No activity for $mins minutes. Move the mouse or press a key to cancel." 2>/dev/null
+        fi
+        touch "$STATE/warned"
+    fi
+    exit 0
+fi
+
+echo "powering off: idle $mins min"
+wall "Idle for $mins min: powering off now." 2>/dev/null
+systemctl poweroff

@@ -1,0 +1,6 @@
+[Unit]
+Description=Power off after 1 hour with no desktop or SSH activity
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/idle-shutdown
