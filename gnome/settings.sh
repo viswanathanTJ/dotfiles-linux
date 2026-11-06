@@ -184,6 +184,8 @@ gnome_desktops() {
     # (the extension itself is only on the fedora branch)
     if [ -d "$STOW/desktops" ]; then
         set_extensions +desktop-rules@local -auto-move-windows@gnome-shell-extensions.gcampax.github.com
+        # netspeed-mbps@local: upload (top line) / download (bottom line) in Mbps, left of the top bar
+        set_extensions +netspeed-mbps@local
     fi
 
     say "Touchpad (Wayland): 3-finger left/right = window switcher, 4-finger left/right = desktops"

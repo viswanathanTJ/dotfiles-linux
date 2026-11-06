@@ -1,0 +1,14 @@
+{
+  "uuid": "netspeed-mbps@local",
+  "name": "Network speed (Mbps)",
+  "description": "Upload above, download below, in Mbps, on the left of the top bar.",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
+  ],
+  "version": 1
+}

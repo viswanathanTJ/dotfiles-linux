@@ -194,6 +194,8 @@ Gestures need a **Wayland** session: on the login screen, choose **Ubuntu** with
 
 The app-to-desktop extension (`desktop-rules@local`: Teams 1, Brave 2, kitty + VS Code 3, others 4) is turned on by `./setup.sh desktops` (log out and in to load it). It crashed GNOME 46 once; it now moves windows from an idle callback. If it ever logs you out: `gnome-extensions disable desktop-rules@local`.
 
+The network speed extension (`netspeed-mbps@local`) shows upload on the top line and download on the bottom line, in Mbps, on the left of the top bar. It is also turned on by `./setup.sh desktops` (log out and in to load it). It counts the real network cards only (wired and Wi-Fi), not loopback, Docker or VPN tunnels such as Tailscale. Turn off: `gnome-extensions disable netspeed-mbps@local`.
+
 ## Memory (out-of-memory freezes)
 
 On 2026-10-25 several Claude sessions building Android projects at once filled all 32 GB of RAM and the swap, and the PC froze until a hard reset. `./setup.sh memory` sets up two things against that:

@@ -1,0 +1,11 @@
+/* Two small lines that fit inside the top bar */
+.netspeed-mbps-box {
+    padding: 0 6px;
+}
+.netspeed-mbps-label {
+    font-size: 9px;
+    font-weight: bold;
+    font-feature-settings: "tnum";
+    min-width: 72px;
+    text-align: right;
+}
