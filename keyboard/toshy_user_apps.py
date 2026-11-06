@@ -50,9 +50,13 @@ keymap("User app launchers", {
     C("RC-LC-e"):            C("C-Alt-e"),                   # Teams: search (Ctrl+Alt+E)
     C("RC-LC-x"):            C("C-Alt-Super-x"),                   # Brave
     C("RC-LC-p"):            C("C-Alt-Super-p"),                   # Postman
-    # Caps+Shift+B -> Ctrl+Alt+Super+Shift+B = GNOME shortcut "JBL speaker" (~/.local/bin/jbl-notify:
-    # runs jbl, result as a notification). Takes Ctrl+Shift+B from apps (Brave bookmarks bar, VS Code build).
-    C("Shift-LC-b"):         C("Shift-C-Alt-Super-b"),
+    # Alt+Caps+J -> Ctrl+Alt+Super+Shift+B = GNOME shortcut "JBL speaker" (~/.local/bin/jbl-notify: status
+    # notification; reconnects with jbl if not connected)
+    C("RC-LC-j"):            C("Shift-C-Alt-Super-b"),             # JBL speaker
+    # Alt+Caps+. / , / / -> media keys: next song, previous song, play/pause (GNOME sends them to the player)
+    C("RC-LC-Dot"):          C("NEXTSONG"),
+    C("RC-LC-Comma"):        C("PREVIOUSSONG"),
+    C("RC-LC-Slash"):        C("PLAYPAUSE"),
     # Alt+Caps+L (or Alt+Left Ctrl+L) -> Ctrl+Alt+Shift+L = GNOME shortcut "Blank screen"
     # (~/.local/bin/blank-screen; no password while `autolock off`)
     C("RC-LC-l"):            C("C-Alt-Shift-l"),
@@ -119,17 +123,6 @@ keymap("User terminal tab switching", {
     # Without this, Caps+[ is Ctrl+[ = Esc, which tmux can't tell apart from Esc.
     C("LC-Left_Brace"):         C("Alt-h"),                     # previous tmux window
     C("LC-Right_Brace"):        C("Alt-l"),                     # next tmux window
-    # Caps+Shift+1..9 = tmux window 1..9: sent as Alt+Shift+N, which ~/.tmux.conf binds (M-! .. M-().
-    # A terminal can't send Ctrl+Shift+digit on its own (it arrives as a plain digit).
-    C("Shift-LC-Key_1"):        C("Shift-Alt-Key_1"),
-    C("Shift-LC-Key_2"):        C("Shift-Alt-Key_2"),
-    C("Shift-LC-Key_3"):        C("Shift-Alt-Key_3"),
-    C("Shift-LC-Key_4"):        C("Shift-Alt-Key_4"),
-    C("Shift-LC-Key_5"):        C("Shift-Alt-Key_5"),
-    C("Shift-LC-Key_6"):        C("Shift-Alt-Key_6"),
-    C("Shift-LC-Key_7"):        C("Shift-Alt-Key_7"),
-    C("Shift-LC-Key_8"):        C("Shift-Alt-Key_8"),
-    C("Shift-LC-Key_9"):        C("Shift-Alt-Key_9"),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     ctx_app_is_terminal
@@ -156,16 +149,16 @@ keymap("User Caps word erase", {
 )
 
 keymap("User desktop numbers", {
-    # Mac Control+1..4 = desktop 1..4: physical Left Ctrl (Super in apps, Ctrl in terminals) or Caps (Ctrl)
-    # -> Super+Alt+1..4 = GNOME switch-to-workspace-1..4. Tabs by number are on Alt (Cmd) + 1..9.
+    # Desktop 1..4 -> Super+Alt+1..4 = GNOME switch-to-workspace-1..4: physical Left Ctrl+1..4 (Super in
+    # apps) or Caps+Shift+1..4. Caps+1..9 alone stays Ctrl+N: tmux window N in kitty, tab N in Brave.
     C("Super-Key_1"):           C("Super-Alt-Key_1"),
     C("Super-Key_2"):           C("Super-Alt-Key_2"),
     C("Super-Key_3"):           C("Super-Alt-Key_3"),
     C("Super-Key_4"):           C("Super-Alt-Key_4"),
-    C("LC-Key_1"):              C("Super-Alt-Key_1"),
-    C("LC-Key_2"):              C("Super-Alt-Key_2"),
-    C("LC-Key_3"):              C("Super-Alt-Key_3"),
-    C("LC-Key_4"):              C("Super-Alt-Key_4"),
+    C("Shift-LC-Key_1"):        C("Super-Alt-Key_1"),
+    C("Shift-LC-Key_2"):        C("Super-Alt-Key_2"),
+    C("Shift-LC-Key_3"):        C("Super-Alt-Key_3"),
+    C("Shift-LC-Key_4"):        C("Super-Alt-Key_4"),
 }, when = lambda ctx:
     cnfg.screen_has_focus and
     not ctx_app_is_remote

@@ -1,17 +1,46 @@
 #!/usr/bin/env bash
-# jbl-notify: run `jbl` (auto: check, then reconnect or pair) from a keyboard shortcut and show the
-# result as a notification, since there's no terminal to print to. Caps+Shift+B (Toshy -> GNOME).
+# jbl-notify: Caps+Shift+B (Toshy -> GNOME shortcut). Shows the JBL's status as a notification right
+# away (connected? audio going to it?). If that's all fine it stops there; otherwise it runs `jbl`
+# (reconnect, or pair) and updates the same notification with the result.
+# Each press is logged to ~/.cache/jbl-notify.log (to check the shortcut reaches this script).
 set -u
 
-# One notification, updated in place: "Connecting..." then the result
-id=$(notify-send -p -a JBL -i audio-speakers "JBL Flip 6" "Checking and connecting..." 2>/dev/null)
-out=$("$HOME/.local/bin/jbl" "$@" 2>&1)
-status=$?
+MAC=E8:26:CF:83:55:2E
+log="${XDG_CACHE_HOME:-$HOME/.cache}/jbl-notify.log"
+echo "$(date '+%F %T') pressed" >>"$log"
 
-# The checklist lines are noise here; keep the outcome (last few lines)
-summary=$(printf '%s\n' "$out" | grep -v -E '^(JBL Flip 6 check:|  (ok|--)  |$)' | tail -4)
-if [ $status -eq 0 ]; then
-    notify-send -r "${id:-0}" -a JBL -i audio-speakers "JBL connected" "$summary"
+note() {   # $1 = icon, $2 = title, $3 = body; updates the same notification in place
+    id=$(notify-send -p ${id:+-r "$id"} -a JBL -i "$1" "$2" "$3" 2>/dev/null) || true
+}
+
+# Quick status
+connected=no
+bluetoothctl info "$MAC" 2>/dev/null | grep -q 'Connected: yes' && connected=yes
+sink=$(pactl list short sinks 2>/dev/null | grep -o -E 'bluez_output\.E8_26_CF_83_55_2E[^[:space:]]*' | head -1)
+default=$(pactl get-default-sink 2>/dev/null)
+out=$(pactl list sinks 2>/dev/null | awk -v d="$default" '$1=="Name:" {n=$2} $1=="Description:" && n==d {sub(/^[ \t]*Description: /, ""); print; exit}')
+
+if [ $connected = yes ] && [ -n "$sink" ] && [ "$sink" = "$default" ]; then
+    vol=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | awk '{printf "%d%%", $2 * 100}')
+    note audio-speakers "JBL connected" "Output: ${out:-JBL Flip 6}  ·  volume ${vol:-?}
+No sound? Run jbl in a terminal to reconnect."
+    echo "$(date '+%F %T') ok: connected, default output" >>"$log"
+    exit 0
+fi
+
+if [ $connected = yes ]; then
+    note audio-speakers "JBL connected, not the output" "Output now: ${out:-unknown}. Switching to the JBL..."
 else
-    notify-send -r "${id:-0}" -a JBL -i dialog-warning "JBL: needs attention" "$summary"
+    note audio-speakers "JBL not connected" "Output now: ${out:-unknown}. Connecting..."
+fi
+
+# Fix it: jbl auto (reconnect, or pair if it's in pairing mode)
+result=$("$HOME/.local/bin/jbl" 2>&1)
+status=$?
+summary=$(printf '%s\n' "$result" | grep -v -E '^(JBL Flip 6 check:|  (ok|--)  |$)' | tail -4)
+echo "$(date '+%F %T') jbl exit $status" >>"$log"
+if [ $status -eq 0 ]; then
+    note audio-speakers "JBL connected" "$summary"
+else
+    note dialog-warning "JBL: needs attention" "$summary"
 fi
